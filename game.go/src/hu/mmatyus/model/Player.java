@@ -1,5 +1,11 @@
 package hu.mmatyus.model;
 
-public interface Player {
-  int move( Board board );
+public class Player {
+  enum Type {
+    HUMAN
+    , COMPUTER
+  }
+  Type type;
+  Algorithm algo;
+  int param;
 }

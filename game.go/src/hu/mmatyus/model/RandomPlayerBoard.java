@@ -3,41 +3,40 @@ package hu.mmatyus.model;
 import java.util.List;
 import java.util.Random;
 
-public class RandomPlayerBoard extends Board implements Game<Integer> {
+public class RandomPlayerBoard implements Game<Integer> {
   public static final int MAX_RANDOM_TRIES = 50;
+  Board board;
   Random rand = new Random();
   PlayerPolicy policy;
 
   public RandomPlayerBoard( BoardType boardType, PlayerPolicy policy ) {
-    super( boardType );
+    board = new Board(boardType);
     this.policy = policy;
   }
 
-  public void playRandomGame() {
-    while( !isGameOver() ) {
-      move( selectRandomMove() );
-    }
+  public void setBoard(Board board) {
+    this.board = board;
   }
 
   public int selectRandomMove() {
-    if( numberOfEmptyCells == 0 )
-      return PASS_MOVE;
+    if( board.numberOfEmptyCells == 0 )
+      return Board.PASS_MOVE;
     // tries to kill an enemy string
-    if( policy.preferKill && numberOfStringsInAtari > 0 ) {
-      int k = rand.nextInt( numberOfStringsInAtari );
-      int l = stringsInAtari.nextSetBit( 0 );
+    if( policy.preferKill && board.numberOfShapesInAtari > 0 ) {
+      int k = rand.nextInt( board.numberOfShapesInAtari );
+      int l = board.shapesInAtari.nextSetBit( 0 );
       for( int i = 0; i < k; ++i ) {
-        l = stringsInAtari.nextSetBit( l + 1 );
+        l = board.shapesInAtari.nextSetBit( l + 1 );
       }
-      int pos = lives[l].nextSetBit( 0 );
-      if( board[l] == theOtherColor( nextPlayer ) && isLegalMove( pos ) && !isTrivialEye( pos, nextPlayer ) ) {
+      int pos = board.lives[l].nextSetBit( 0 );
+      if( board.cells[l] == Board.theOtherColor( board.nextPlayer ) && board.isLegalMove( pos ) && !isTrivialEye( pos, board.nextPlayer ) ) {
         return pos;
       }
     }
 
     // select between two strategies for faster random selection
     // 3*size is an experimental optimum
-    if( numberOfEmptyCells > 3 * boardType.size ) {
+    if( board.numberOfEmptyCells > 3 * board.boardType.sideLength ) {
       return selectRandomMoveInMiddleGame();
     } else {
       return selectRandomMoveInEndGame();
@@ -45,10 +44,10 @@ public class RandomPlayerBoard extends Board implements Game<Integer> {
   }
 
   protected int selectRandomMoveInMiddleGame() {
-    int p = rand.nextInt( n );
+    int p = rand.nextInt( board.cellCount );
     int tries = 0;
-    while( tries < MAX_RANDOM_TRIES && ( !isLegalMove( p ) || isTrivialEye( p, nextPlayer ) ) ) {
-      p = rand.nextInt( n );
+    while( tries < MAX_RANDOM_TRIES && ( !board.isLegalMove( p ) || isTrivialEye( p, board.nextPlayer ) ) ) {
+      p = rand.nextInt( board.cellCount );
       tries++;
     }
     if( tries == MAX_RANDOM_TRIES ) {
@@ -60,39 +59,40 @@ public class RandomPlayerBoard extends Board implements Game<Integer> {
   protected int selectRandomMoveInEndGame() {
     // tries to throw random moves a couple of times
     for( int tries = 0; tries < 3; ++tries ) {
-      int k = rand.nextInt( numberOfEmptyCells );
-      int l = empty.nextSetBit( 0 );
+      int k = rand.nextInt( board.numberOfEmptyCells );
+      int l = board.posEmpty.nextSetBit( 0 );
       for( int i = 0; i < k; ++i ) {
-        l = empty.nextSetBit( l + 1 );
+        l = board.posEmpty.nextSetBit( l + 1 );
       }
-      if( isLegalMove( l ) && !isTrivialEye( l, nextPlayer ) ) {
+      if( board.isLegalMove( l ) && !isTrivialEye( l, board.nextPlayer ) ) {
         return l;
       }
     }
 
     // random tries failed, so pick the first move or pass if no more
-    int l = empty.nextSetBit( 0 );
+    int l = board.posEmpty.nextSetBit( 0 );
     while( l != -1 ) {
-      if( isLegalMove( l ) && !isTrivialEye( l, nextPlayer ) ) {
+      if( board.isLegalMove( l ) && !isTrivialEye( l, board.nextPlayer ) ) {
         return l;
       }
-      l = empty.nextSetBit( l + 1 );
+      l = board.posEmpty.nextSetBit( l + 1 );
     }
 
-    return PASS_MOVE;
+    return Board.PASS_MOVE;
   }
 
   protected boolean isTrivialEye( int pos, int color ) {
-    int otherColor = theOtherColor( color );
+    int otherColor = Board.theOtherColor( color );
 
-    for( int p : neighborPos[pos] ) {
-      if( p == OUT_OF_BOARD ) {
+    for(int ni = 0; ni < BoardType.MAX_NEIGHBORS; ++ni)
+    {
+      int p = board.boardType.neighbor(pos, ni);
+      if( p == Board.OUT_OF_BOARD )
         continue;
-      }
-      if( board[p] == EMPTY || board[p] == otherColor ) {
+      if( board.cells[p] == Board.EMPTY || board.cells[p] == otherColor ) {
         return false;
-      } else if( board[p] == color ) {
-        if( lifeCounts[string[p]] == 1 ) {
+      } else if( board.cells[p] == color ) {
+        if( board.lifeCounts[board.shapeAtPos[p]] == 1 ) {
           return false;
         }
       }
@@ -101,32 +101,43 @@ public class RandomPlayerBoard extends Board implements Game<Integer> {
   }
 
   @Override public List<Integer> actions() {
-    return availableActions();
+    return board.availableActions();
   }
 
   @Override
   /**
-   * Evalutaions for the last player. 1 if the last player wins 0 otherwise.
-   */ public double eval() {
-    if( nextPlayer == Board.BLACK )
+   * Evaluations for the last player. 1 if the last player wins 0 otherwise.
+   *
+   *
+   */
+  public double eval() {
+    if( board.nextPlayer == Board.BLACK )
       return 1 - absoluteEval();
     else
       return absoluteEval();
   }
 
   @Override public void take( Integer action ) {
-    move( action );
+    board.move( action );
   }
 
   /**
-   * Returns an absolute evalalutation. Score is 1 if black wins, 0 if white wins.
+   * Returns an absolute evaluation. Score is 1 if black wins, 0 if white wins.
    *
-   * @return
+   * @return double - ChineseScore
    */
   public double absoluteEval() {
-    while( !isGameOver() ) {
-      move( selectRandomMove() );
+    while( !board.isGameOver() ) {
+      board.move( selectRandomMove() );
     }
-    return calcChineseScore() > 0 ? 1 : 0;
+    return board.calcChineseScore() > 0 ? 1 : 0;
   }
+
+  //BOARD_EVAL
+  public void playRandomGame() {
+    while( !board.isGameOver() ) {
+      board.move( selectRandomMove() );
+    }
+  }
+
 }

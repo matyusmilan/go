@@ -4,14 +4,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by milan on 2015.11.29..
+ * Immutable Handicap stones calculator.
  */
 public class Handicap {
-  private int handiLine_1, handiLine_2, handiLine_3, size_of_board;
+  private final int size_of_board;
+  private final int handiLine_1, handiLine_2, handiLine_3;
 
   // 9, 13, 19
-  public Handicap( int size ) {
-    this.size_of_board = size;
+  public Handicap( BoardType bt ) {
+    this.size_of_board = bt.sideLength;
     if( size_of_board >= 13 ) {
       handiLine_1 = 3;
       handiLine_3 = size_of_board - 4;
@@ -22,7 +23,7 @@ public class Handicap {
     handiLine_2 = ( size_of_board - 1 ) / 2;
   }
 
-  public int getPos( int x, int y ) {
+  public int toPos( int x, int y ) {
     return y * size_of_board + x;
   }
 
@@ -44,25 +45,25 @@ public class Handicap {
       int line3 = handiLine_3;
 
       if( n >= 2 ) {
-        result.add( getPos( line1, line1 ) );
-        result.add( getPos( line3, line3 ) );
+        result.add( toPos( line1, line1 ) );
+        result.add( toPos( line3, line3 ) );
       }
       if( n >= 3 )
-        result.add( getPos( line1, line3 ) );
+        result.add( toPos( line1, line3 ) );
       if( n >= 4 )
-        result.add( getPos( line3, line1 ) );
+        result.add( toPos( line3, line1 ) );
       if( n >= 5 && n % 2 != 0 ) {
-        result.add( getPos( line2, line2 ) );
+        result.add( toPos( line2, line2 ) );
         --n;
       }
       if( n >= 5 )
-        result.add( getPos( line1, line2 ) );
+        result.add( toPos( line1, line2 ) );
       if( n >= 6 )
-        result.add( getPos( line3, line2 ) );
+        result.add( toPos( line3, line2 ) );
       if( n >= 7 )
-        result.add( getPos( line2, line1 ) );
+        result.add( toPos( line2, line1 ) );
       if( n >= 8 )
-        result.add( getPos( line2, line3 ) );
+        result.add( toPos( line2, line3 ) );
     }
     return result;
   }

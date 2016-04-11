@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.Random;
 
 public class UCB<Action> {
-  protected static Random                 rand       = new Random();
-  protected        Statistic              statistic  = new Statistic();
-  protected        Map<Action, Statistic> statistics = new HashMap<Action, Statistic>();
+  protected Statistic              statistic  = new Statistic();
+  protected Map<Action, Statistic> statistics = new HashMap<>();
   protected int emptyStatisticCount;
+  protected static Random rand = new Random();
 
   public void addStatistic( Action action, double value ) {
     Statistic stat = statistics.get( action );
@@ -71,13 +71,5 @@ public class UCB<Action> {
       }
     }
     return bestAction;
-  }
-
-  public void dump( double minCount ) {
-    for( Map.Entry<Action, Statistic> e : statistics.entrySet() ) {
-      if( e.getValue().count() > minCount ) {
-        System.out.println( e.getKey() + ": " + e.getValue().mean() + "[" + e.getValue().dev() + "]" + "(" + e.getValue().count() + ")" );
-      }
-    }
   }
 }

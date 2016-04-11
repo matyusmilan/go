@@ -7,14 +7,14 @@ import java.util.*;
 
 public class UCT_Node<Action> {
 
-  protected static Random rand = new Random();
   protected Vector<UCT_Node<Action>> children;
   protected UCT_Node<Action>         parent;
   protected Action                   action;
   protected List<Action>             actions;
   protected PlayerPolicy             policy;
-  protected boolean   first     = true;
-  protected Statistic statistic = new Statistic();
+  protected        boolean   first     = true;
+  protected        Statistic statistic = new Statistic();
+  protected static Random    rand      = new Random();
   protected UCB_Pair<Action> ucb_pair;
 
   public UCT_Node( UCT_Node<Action> parent, Game<Action> game, Action action, PlayerPolicy policy, UCB_Pair<Action> ucb_pair ) {
@@ -28,7 +28,7 @@ public class UCT_Node<Action> {
     }
     actions = game.actions();
 
-    children = new Vector<UCT_Node<Action>>();
+    children = new Vector<>();
     children.setSize( actions.size() );
   }
 
@@ -63,22 +63,23 @@ public class UCT_Node<Action> {
     }
     if( ( !actions.isEmpty() ) && ( policy.fpu > maxscore ) ) {
       int idx = children.size() - actions.size();
-      children.set( idx, new UCT_Node<Action>( this, game, preferedAction(), policy, ucb_pair == null ? null : ucb_pair.getComplementer() ) );
+      children.set( idx, new UCT_Node<>( this, game, preferredAction(), policy, ucb_pair == null ? null : ucb_pair.getComplementer() ) );
       bestNode = children.get( idx );
     }
     return bestNode;
   }
 
-  Action preferedAction() {
+  Action preferredAction() {
     if( ucb_pair == null ) {
       return actions.remove( rand.nextInt( actions.size() ) );
     }
     UCB<Action> ucb = ucb_pair.getPrimary();
     Action a = ucb.best( actions, policy );
-    //System.out.println( "preferdAction: " + a + " from " + actions.size() );
+    //System.out.println( "preferredAction: " + a + " from " + actions.size() );
     actions.remove( a );
     return a;
   }
+
 
   protected void eval( Game<Action> game ) {
     buildStatistic( game.eval() );
@@ -132,6 +133,7 @@ public class UCT_Node<Action> {
     return max + 1;
   }
 
+  /*
   public int getSubTreeSize() {
     int n = 1;
     for( UCT_Node<Action> node : children ) {
@@ -141,6 +143,7 @@ public class UCT_Node<Action> {
     }
     return n;
   }
+  */
 
   public void dump( int depth, int width, int nn, String prefix ) {
     System.out.print( prefix );
@@ -149,13 +152,13 @@ public class UCT_Node<Action> {
         + ", d=" + getSubTreeDepth() + ", m=" + statistic.mean() + ", s=" + statistic.score( nn, policy ) );
     System.out.println();
     if( depth > 0 ) {
-      TreeMap<Double, List<UCT_Node<Action>>> m = new TreeMap<Double, List<UCT_Node<Action>>>( Collections.reverseOrder() );
+      TreeMap<Double, List<UCT_Node<Action>>> m = new TreeMap<>( Collections.reverseOrder() );
       for( UCT_Node<Action> node : children ) {
-        if( node != null ) {
+        if( null != node ) {
           List<UCT_Node<Action>> list = m.get( node.statistic.mean() );
           if( list == null ) {
-            list = new ArrayList<UCT_Node<Action>>();
-            m.put( new Double( node.statistic.mean() ), list );
+            list = new ArrayList<>();
+            m.put( node.statistic.mean(), list );
           }
           list.add( node );
         }

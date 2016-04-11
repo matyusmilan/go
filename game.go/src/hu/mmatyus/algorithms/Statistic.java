@@ -10,7 +10,7 @@ public class Statistic {
   public void add( double z ) {
     ++amount;
     x += z;
-    xx += z * z;
+    xx += z*z;
   }
 
   public int count() {
@@ -34,14 +34,4 @@ public class Statistic {
     x *= a;
     xx *= a;
   }
-
-  public double var() {
-    double m = mean();
-    return xx - m * m;
-  }
-
-  public double dev() {
-    return Math.sqrt( var() );
-  }
-
 }
