@@ -1,7 +1,6 @@
 package hu.mmatyus.algorithms;
 
 import hu.mmatyus.model.Board;
-import hu.mmatyus.model.Player;
 import hu.mmatyus.model.PlayerPolicy;
 import hu.mmatyus.model.RandomPlayerBoard;
 
