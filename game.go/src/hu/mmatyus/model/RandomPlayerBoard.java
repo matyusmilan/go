@@ -5,16 +5,16 @@ import java.util.Random;
 
 public class RandomPlayerBoard implements Game<Integer> {
   public static final int MAX_RANDOM_TRIES = 50;
-  Board board;
-  Random rand = new Random();
-  PlayerPolicy policy;
+  Board                   board;
+  Random                  rand             = new Random();
+  PlayerPolicy            policy;
 
   public RandomPlayerBoard( BoardType boardType, PlayerPolicy policy ) {
-    board = new Board(boardType);
+    board = new Board( boardType );
     this.policy = policy;
   }
 
-  public void setBoard(Board board) {
+  public void setBoard( Board board ) {
     this.board = board;
   }
 
@@ -60,9 +60,9 @@ public class RandomPlayerBoard implements Game<Integer> {
     // tries to throw random moves a couple of times
     for( int tries = 0; tries < 3; ++tries ) {
       int k = rand.nextInt( board.numberOfEmptyCells );
-      int l = board.posEmpty.nextSetBit( 0 );
+      int l = board.empties.nextSetBit( 0 );
       for( int i = 0; i < k; ++i ) {
-        l = board.posEmpty.nextSetBit( l + 1 );
+        l = board.empties.nextSetBit( l + 1 );
       }
       if( board.isLegalMove( l ) && !isTrivialEye( l, board.nextPlayer ) ) {
         return l;
@@ -70,12 +70,12 @@ public class RandomPlayerBoard implements Game<Integer> {
     }
 
     // random tries failed, so pick the first move or pass if no more
-    int l = board.posEmpty.nextSetBit( 0 );
+    int l = board.empties.nextSetBit( 0 );
     while( l != -1 ) {
       if( board.isLegalMove( l ) && !isTrivialEye( l, board.nextPlayer ) ) {
         return l;
       }
-      l = board.posEmpty.nextSetBit( l + 1 );
+      l = board.empties.nextSetBit( l + 1 );
     }
 
     return Board.PASS_MOVE;
@@ -84,9 +84,8 @@ public class RandomPlayerBoard implements Game<Integer> {
   protected boolean isTrivialEye( int pos, int color ) {
     int otherColor = Board.theOtherColor( color );
 
-    for(int ni = 0; ni < BoardType.MAX_NEIGHBORS; ++ni)
-    {
-      int p = board.boardType.neighbor(pos, ni);
+    for( int ni = 0; ni < BoardType.MAX_NEIGHBORS; ++ni ) {
+      int p = board.boardType.neighbor( pos, ni );
       if( p == Board.OUT_OF_BOARD )
         continue;
       if( board.cells[p] == Board.EMPTY || board.cells[p] == otherColor ) {
@@ -100,7 +99,8 @@ public class RandomPlayerBoard implements Game<Integer> {
     return true;
   }
 
-  @Override public List<Integer> actions() {
+  @Override
+  public List<Integer> actions() {
     return board.availableActions();
   }
 
@@ -117,7 +117,8 @@ public class RandomPlayerBoard implements Game<Integer> {
       return absoluteEval();
   }
 
-  @Override public void take( Integer action ) {
+  @Override
+  public void take( Integer action ) {
     board.move( action );
   }
 

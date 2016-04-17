@@ -1,11 +1,23 @@
 package hu.mmatyus.model;
 
 public class Player {
-  enum Type {
+  public enum Type {
     HUMAN
     , COMPUTER
   }
-  Type type;
-  Algorithm algo;
-  int param;
+  public Type type;
+  public Algorithm algo;
+  public int param;
+  
+  Player(Type t, Algorithm a, int p){
+    this.type = t;
+    this.algo = a;
+    this.param = p;
+  }
+  
+  Player(Type t) {
+    this.type = t;
+    this.algo = null;
+    this.param = -1;
+  }
 }

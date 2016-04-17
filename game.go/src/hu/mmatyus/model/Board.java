@@ -5,70 +5,68 @@ import java.util.*;
 public class Board {
   /////////////////////////////////////////////////////////
   // Universe
-  public static final int    EMPTY        = -1;
-  public static final int    WHITE        = 0;
-  public static final int    BLACK        = 1;
-  
-  public static final int    PASS_MOVE    = -1; // Special position for pass
-  public static final int    RESIGN_MOVE  = -3; // Special position for resign
-  
-  public static final int    NO_KO_POS    = -1; // Position of KO is none.
-  public static final int    NO_LAST_POS  = -2; // Special position for game starting.
-  public static final int    OUT_OF_BOARD = BoardType.OUT_OF_BOARD;
-  public static final int    MAX_NEIGHBORS = BoardType.MAX_NEIGHBORS;
-  public static final double DEFAULT_KOMI         = 6.5;
-  
+  public static final int      EMPTY         = -1;
+  public static final int      WHITE         = 0;
+  public static final int      BLACK         = 1;
+
+  public static final int      PASS_MOVE     = -1;                     // Special position for pass
+  public static final int      RESIGN_MOVE   = -3;                     // Special position for resign
+
+  public static final int      NO_KO_POS     = -1;                     // Position of KO is none.
+  public static final int      NO_LAST_POS   = -2;                     // Special position for game starting.
+  public static final int      OUT_OF_BOARD  = BoardType.OUT_OF_BOARD;
+  public static final int      MAX_NEIGHBORS = BoardType.MAX_NEIGHBORS;
+  public static final double   DEFAULT_KOMI  = 6.5;
+
   /////////////////////////////////////////////////////////
   // Configuration
-  public final     BoardType boardType;
-  public final     double    komi;
-  public final     int       sideLength;
-  public final     int       cellCount;            // Amount of board positions = size_of_board^2
+  public final BoardType       boardType;
+  public final double          komi;
+  public final int             sideLength;
+  public final int             cellCount;                              // Amount of board positions = size_of_board^2
 
   /////////////////////////////////////////////////////////
   // State
-  
-  protected           int[]     cells;
-  protected           int       koPos;                // Position of ko or -1 if there is no ko.
-  
+
+  protected int[]              cells;
+  protected int                koPos;                                  // Position of ko or -1 if there is no ko.
+
   // Shapes
-  protected           int[]     shapeAtPos;           // Shape id for each position. Index is table position.
-  protected           int[]     lifeCounts;           // Life counts for each shape. Index is shape id.
-  protected           BitSet[]  lives;                // Life giving cells of each shape. Index is shape id.
-  protected           int[]     nextInShape;          // Points to the next stone of the shape on this position. Index is table position.
+  protected int[]              shapeAtPos;                             // Shape id for each position. Index is table position.
+  protected int[]              lifeCounts;                             // Life counts for each shape. Index is shape id.
+  protected BitSet[]           lives;                                  // Life giving cells of each shape. Index is shape id.
+  protected int[]              nextInShape;                            // Points to the next stone of the shape on this position. Index is table position.
 
+  protected int                moves;                                  // Moves so far
+  protected int                passNum;                                // Number of consecutive passes
+  protected int                lastMove;                               // Position of last move
+  protected int                nextPlayer;                             // Id of next player
+  protected transient double[] area;                                   // 0-WHITE, 1-BLACK, 0,5 - neutral
 
-  protected           int       moves;                // Moves so far
-  protected           int       passNum;              // Number of consecutive passes
-  protected           int       lastMove;             // Position of last move
-  protected           int       nextPlayer;           // Id of next player
-  protected transient double[]  area;                 // 0-WHITE, 1-BLACK, 0,5 - neutral
-
-  protected           BitSet    posEmpty;             // pos -> isEmpty()
-  protected           int       numberOfShapesInAtari;
-  protected           BitSet    shapesInAtari;        // pos -> isAtari = position is part of a shape with one life
-  protected           int       numberOfEmptyCells;
+  protected BitSet             empties;                                // pos -> isEmpty()
+  protected int                numberOfShapesInAtari;
+  protected BitSet             shapesInAtari;                          // pos -> isAtari = position is part of a shape with one life
+  protected int                numberOfEmptyCells;
 
   public Board( BoardType boardType ) {
     this( boardType, 0, DEFAULT_KOMI );
   }
 
-  public Board( BoardType boardType, int handicap)
-  {
-    this(boardType, handicap, DEFAULT_KOMI);
-  }
-  
-  public Board( BoardType boardType, int handicap, double komi ) {
-    this(boardType, handicap, komi, true);
+  public Board( BoardType boardType, int handicap ) {
+    this( boardType, handicap, DEFAULT_KOMI );
   }
 
-  private Board( BoardType boardType, int handicap, double komi, boolean doInit) {
+  public Board( BoardType boardType, int handicap, double komi ) {
+    this( boardType, handicap, komi, true );
+  }
+
+  private Board( BoardType boardType, int handicap, double komi, boolean doInit ) {
     this.boardType = boardType;
     this.sideLength = boardType.sideLength;
     this.cellCount = sideLength * sideLength;
 
     this.cells = new int[cellCount];
-    this.posEmpty = new BitSet( cellCount );
+    this.empties = new BitSet( cellCount );
     this.shapesInAtari = new BitSet( cellCount );
     this.area = new double[cellCount];
     this.shapeAtPos = new int[cellCount];
@@ -79,26 +77,23 @@ public class Board {
       this.lives[i] = new BitSet( cellCount );
     }
 
-    if(doInit)
-    {
+    if( doInit ) {
       initEmpty();
-      initHandi(handicap);
+      initHandi( handicap );
     }
-    
+
     this.komi = komi;
   }
-  
-  public Board(Board other)
-  {
-    this(other.boardType, 0, other.komi, false);
-    copyFrom(other);
+
+  public Board( Board other ) {
+    this( other.boardType, 0, other.komi, false );
+    copyFrom( other );
   }
-  
-  public Board clone()
-  {
-    return new Board(this);
+
+  public Board clone() {
+    return new Board( this );
   }
-  
+
   private void copyFrom( Board other ) {
     moves = other.moves;
     nextPlayer = other.nextPlayer;
@@ -116,8 +111,8 @@ public class Board {
       lives[i].or( other.lives[i] );
     }
 
-    posEmpty.clear();
-    posEmpty.or( other.posEmpty );
+    empties.clear();
+    empties.or( other.empties );
     numberOfEmptyCells = other.numberOfEmptyCells;
 
     shapesInAtari.clear();
@@ -139,14 +134,14 @@ public class Board {
     nextPlayer = BLACK;
     koPos = NO_KO_POS;
 
-    posEmpty.set( 0, cellCount );
+    empties.set( 0, cellCount );
     numberOfEmptyCells = cellCount;
 
     shapesInAtari.clear();
     numberOfShapesInAtari = 0;
   }
-  
-  private void initHandi(int handicap) {
+
+  private void initHandi( int handicap ) {
     Handicap handi = new Handicap( this.boardType );
     if( handicap != 0 ) {
       for( int stone : handi.getHandicapStones( handicap ) ) {
@@ -156,7 +151,7 @@ public class Board {
     }
   }
 
-  public static int theOtherColor( int color ) {  
+  public static int theOtherColor( int color ) {
     return ( 1 - color );
   }
 
@@ -182,13 +177,13 @@ public class Board {
     int[] numOfPieces = new int[4];
     numOfPieces[BLACK] = 0;
     numOfPieces[WHITE] = 0;
-    numOfPieces[2+BLACK] = 0;
-    numOfPieces[2+WHITE] = 0;
+    numOfPieces[2 + BLACK] = 0;
+    numOfPieces[2 + WHITE] = 0;
     for( int i = 0; i < cellCount; ++i ) {
       if( 0 <= cells[i] ) {
         numOfPieces[cells[i]]++;
-        if(i < sideLength || sideLength*sideLength - sideLength <= i || i % sideLength == 0 || i % sideLength == sideLength -1){
-          numOfPieces[2+cells[i]]++;
+        if( i < sideLength || sideLength * sideLength - sideLength <= i || i % sideLength == 0 || i % sideLength == sideLength - 1 ) {
+          numOfPieces[2 + cells[i]]++;
         }
       }
     }
@@ -218,31 +213,31 @@ public class Board {
         x = i;
         y = j;
         onBoard[0] = false;
-        if( x!=-1 && y!=-1 && x!=sideLength && y!=sideLength) {
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
           onBoard[0] = true;
           if( 0 <= cells[getPos( x, y )] )
             sumColor[cells[getPos( x, y )]]++;
         }
-        x = i+1;
+        x = i + 1;
         y = j;
         onBoard[1] = false;
-        if( x!=-1 && y!=-1 && x!=sideLength && y!=sideLength) {
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
           onBoard[1] = true;
           if( 0 <= cells[getPos( x, y )] )
-            sumColor[cells[getPos( x,y )]]++;
+            sumColor[cells[getPos( x, y )]]++;
         }
         x = i;
-        y = j+1;
+        y = j + 1;
         onBoard[3] = false;
-        if( x!=-1 && y!=-1 && x!=sideLength && y!=sideLength) {
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
           onBoard[3] = true;
           if( 0 <= cells[getPos( x, y )] )
             sumColor[cells[getPos( x, y )]]++;
         }
-        x = i+1;
-        y = j+1;
+        x = i + 1;
+        y = j + 1;
         onBoard[2] = false;
-        if( x!=-1 && y!=-1 && x!=sideLength && y!=sideLength ) {
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
           onBoard[2] = true;
           if( 0 <= cells[getPos( x, y )] )
             sumColor[cells[getPos( x, y )]]++;
@@ -253,7 +248,7 @@ public class Board {
               nQ1[color]++;
               break;
             case 2:
-              if( (onBoard[0] && onBoard[2] && cells[getPos( i, j )] + cells[getPos( i + 1, j + 1 )] == 2 * color ) || ( onBoard[1] && onBoard[3] && cells[getPos( i + 1, j )] + cells[getPos( i, j + 1 )] == 2 * color ) )
+              if( ( onBoard[0] && onBoard[2] && cells[getPos( i, j )] + cells[getPos( i + 1, j + 1 )] == 2 * color ) || ( onBoard[1] && onBoard[3] && cells[getPos( i + 1, j )] + cells[getPos( i, j + 1 )] == 2 * color ) )
                 nQd[color]++;
               break;
             case 3:
@@ -293,8 +288,8 @@ public class Board {
   public boolean isSuicide( int pos ) {
     int selfColor = nextPlayer;
     int otherColor = theOtherColor( selfColor );
-    for(int ni=0; ni<MAX_NEIGHBORS; ++ni){
-      int p = boardType.neighbor(pos, ni);
+    for( int ni = 0; ni < MAX_NEIGHBORS; ++ni ) {
+      int p = boardType.neighbor( pos, ni );
       if( p == OUT_OF_BOARD )
         continue;
       if( isEmpty( p ) ) {
@@ -342,7 +337,7 @@ public class Board {
   protected void addStone( int pos, int color ) {
     assert ( cells[pos] == EMPTY );
     cells[pos] = color;
-    posEmpty.clear( pos );
+    empties.clear( pos );
     numberOfEmptyCells--;
   }
 
@@ -368,8 +363,8 @@ public class Board {
     int otherColor = theOtherColor( selfColor );
     addStone( pos, selfColor );
 
-    for(int ni=0; ni<MAX_NEIGHBORS; ++ni){
-      int np = boardType.neighbor(pos, ni);
+    for( int ni = 0; ni < MAX_NEIGHBORS; ++ni ) {
+      int np = boardType.neighbor( pos, ni );
       if( np == OUT_OF_BOARD )
         continue;
       if( cells[np] == selfColor ) {
@@ -395,7 +390,7 @@ public class Board {
     final int shapeId2 = shapeAtPos[pos2];
     if( shapeId1 == shapeId2 )
       return;
-    
+
     lives[shapeId2].or( lives[shapeId1] );
     setLifeCount( shapeId2, lives[shapeId2].cardinality() );
     setLifeCount( shapeId1, 0 );
@@ -449,8 +444,8 @@ public class Board {
     assert ( cells[pos] != EMPTY );
     int color = cells[pos];
     int otherColor = theOtherColor( color );
-    for(int ni=0; ni<MAX_NEIGHBORS; ++ni){
-      int p = boardType.neighbor(pos, ni);
+    for( int ni = 0; ni < MAX_NEIGHBORS; ++ni ) {
+      int p = boardType.neighbor( pos, ni );
       if( p != OUT_OF_BOARD && cells[p] == otherColor ) {
         addLifeToShape( p, pos );
       }
@@ -462,12 +457,12 @@ public class Board {
 
     setLifeCount( pos, 0 );
 
-    posEmpty.set( pos );
+    empties.set( pos );
     numberOfEmptyCells++;
   }
 
   private int setLifeCount( int shapeId, int val ) {
-    if(lifeCounts[shapeId] == val)
+    if( lifeCounts[shapeId] == val )
       return val;
     if( lifeCounts[shapeId] == 1 ) {
       removeShapeFromAtari( shapeId );
@@ -508,8 +503,8 @@ public class Board {
       } else {
         int b = 0;
         int w = 0;
-        for(int ni=0; ni<MAX_NEIGHBORS; ++ni){
-          int p = boardType.neighbor(pos, ni);
+        for( int ni = 0; ni < MAX_NEIGHBORS; ++ni ) {
+          int p = boardType.neighbor( pos, ni );
           if( p == OUT_OF_BOARD || isEmpty( p ) )
             continue;
           if( cells[p] == WHITE )
@@ -540,7 +535,7 @@ public class Board {
     if( isGameOver() ) {
       return actions;
     }
-    for( int pos = posEmpty.nextSetBit( 0 ); pos != -1; pos = posEmpty.nextSetBit( pos + 1 ) ) {
+    for( int pos = empties.nextSetBit( 0 ); pos != -1; pos = empties.nextSetBit( pos + 1 ) ) {
       if( isLegalMove( pos ) ) {
         actions.add( pos );
       }
@@ -549,21 +544,21 @@ public class Board {
     return actions;
   }
 
-  public int[] orderMoves(){
-    List<Integer> moves = availableActions() ;
-    int[] ordered =new int[moves.size()];
+  public int[] orderMoves() {
+    List<Integer> moves = availableActions();
+    int[] ordered = new int[moves.size()];
     int i = 0;
-    if(0 <= lastMove ){
+    if( 0 <= lastMove ) {
       int lx = lastMove % sideLength;
       int ly = lastMove / sideLength;
       int manhattanDist = 1;
       int mx, my;
-      while(0 < moves.size()){
-        for ( Iterator<Integer> iterator = moves.iterator(); iterator.hasNext(); ) {
+      while( 0 < moves.size() ) {
+        for( Iterator<Integer> iterator = moves.iterator(); iterator.hasNext(); ) {
           int m = iterator.next();
           mx = m % sideLength;
-          my= m / sideLength;
-          if(Math.abs(lx - mx) + Math.abs(ly - my) ==  manhattanDist){
+          my = m / sideLength;
+          if( Math.abs( lx - mx ) + Math.abs( ly - my ) == manhattanDist ) {
             ordered[i] = m;
             iterator.remove();
             i++;
@@ -572,7 +567,7 @@ public class Board {
         manhattanDist++;
       }
     } else {
-      for(int m : moves){
+      for( int m : moves ) {
         ordered[i] = m;
         i++;
       }

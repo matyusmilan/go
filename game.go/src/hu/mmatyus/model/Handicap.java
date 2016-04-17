@@ -8,6 +8,7 @@ import java.util.Set;
  */
 public class Handicap {
   private final int size_of_board;
+  public static final int MAX = 9;
   private final int handiLine_1, handiLine_2, handiLine_3;
 
   // 9, 13, 19
