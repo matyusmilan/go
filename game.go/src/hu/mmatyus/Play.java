@@ -1,5 +1,6 @@
 package hu.mmatyus;
 
+import hu.mmatyus.algorithms.NegaMaxRobot;
 import hu.mmatyus.algorithms.UCT_Robot;
 import hu.mmatyus.algorithms.Zobrist;
 import hu.mmatyus.gui.BoardDisplay;
@@ -15,48 +16,47 @@ public class Play {
   public static final String    TITLE              = "{\u03C9} GOmega";
   public static final int       COMPUTER           = Board.BLACK;
   public static final double    KOMI               = 6.5;
-  public static final BoardType DEFAULT_BOARD_TYPE = BoardType.SMALL;
 
   public static void main( String[] args ) throws Exception {
-    final BoardType boardType = DEFAULT_BOARD_TYPE;
     GameConfig gameConfig = new GameConfig();
-    final Board board = new Board( boardType, AMOUNT_OF_HANDICAP, KOMI );
-    final BoardDisplay display = new BoardDisplay( board, gameConfig, TITLE );
-    final BoardEval eval = new BoardEval( board, new PlayerPolicy() );
-    final Robot computer = new UCT_Robot( new PlayerPolicy() );
-    // final Robot computer = new NegaMaxRobot( 3 );
-    final Zobrist zobrist = new Zobrist( boardType );
+    
+    final Board board = new Board( gameConfig.getBoardType(), AMOUNT_OF_HANDICAP, KOMI );
 
+    final BoardDisplay display = new BoardDisplay( board, gameConfig, TITLE );
+    
+    //final Robot computer = new UCT_Robot( new PlayerPolicy() );
+
+    final Robot computer = new NegaMaxRobot( 3 );
+    
     display.setComputerColor( COMPUTER );
 
-    /*
+    
     if( board.getNextPlayer() == COMPUTER ) {
       board.move( computer.move( board ) );
       display.update();
-      System.out.println( zobrist.getZobristHash( board ) );
     }
 
-    display.setListener( new BoardDisplay.Listener() {
-      @Override
-      public void onCellClick( int pos ) {
-        //System.out.println( pos );
-        if( board.isLegalMove( pos ) ) {
-          board.move( pos );
-          if( !board.isGameOver() && COMPUTER != Board.EMPTY ) {
-            display.update();
-            System.out.println( zobrist.getZobristHash( board ) );
-            board.move( computer.move( board ) );
-          }
-          if( board.isGameOver() && board.getPassNum() == 2 ) {
-            eval.eval( 10000, 0.4 );
-            eval.dump();
-            display.setEval( eval );
-          } else {
-            display.update();
-          }
-        }
-      }
-    } );
-    */
+//    display.setListener( new BoardDisplay.Listener() {
+//      @Override
+//      public void onCellClick( int pos ) {
+//        //System.out.println( pos );
+//        if( board.isLegalMove( pos ) ) {
+//          board.move( pos );
+//          if( !board.isGameOver() && COMPUTER != Board.EMPTY ) {
+//            display.update();
+//            board.move( computer.move( board ) );
+//          }
+//          if( board.isGameOver() || board.getPassNum() == 2 ) {
+//            BoardEval eval = new BoardEval( board, new PlayerPolicy() );
+//            eval.eval( 10000, 0.4 );
+//            eval.dump();
+//            display.setEval( eval );
+//          } else {
+//            display.update();
+//          }
+//        }
+//      }
+//    } );
+    
   }
 }

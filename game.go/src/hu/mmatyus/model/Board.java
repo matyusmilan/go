@@ -1,5 +1,7 @@
 package hu.mmatyus.model;
 
+import hu.mmatyus.algorithms.Zobrist;
+
 import java.util.*;
 
 public class Board {
@@ -24,7 +26,7 @@ public class Board {
   public final double          komi;
   public final int             sideLength;
   public final int             cellCount;                              // Amount of board positions = size_of_board^2
-
+  public final Zobrist         zobrist;
   /////////////////////////////////////////////////////////
   // State
 
@@ -40,13 +42,15 @@ public class Board {
   protected int                moves;                                  // Moves so far
   protected int                passNum;                                // Number of consecutive passes
   protected int                lastMove;                               // Position of last move
-  protected int                nextPlayer;                             // Id of next player
+  protected int                nextPlayer;                             // Id of next player, BLACK (0) or WHITE (1) 
   protected transient double[] area;                                   // 0-WHITE, 1-BLACK, 0,5 - neutral
 
   protected BitSet             empties;                                // pos -> isEmpty()
   protected int                numberOfShapesInAtari;
   protected BitSet             shapesInAtari;                          // pos -> isAtari = position is part of a shape with one life
   protected int                numberOfEmptyCells;
+
+  protected long               zobristHashKey = 0L;
 
   public Board( BoardType boardType ) {
     this( boardType, 0, DEFAULT_KOMI );
@@ -64,6 +68,7 @@ public class Board {
     this.boardType = boardType;
     this.sideLength = boardType.sideLength;
     this.cellCount = sideLength * sideLength;
+    this.zobrist = new Zobrist( boardType );
 
     this.cells = new int[cellCount];
     this.empties = new BitSet( cellCount );
@@ -128,6 +133,7 @@ public class Board {
       lifeCounts[i] = 0;
       lives[i].clear();
     }
+    zobristHashKey = 0L;
     passNum = 0;
     moves = 0;
     lastMove = NO_LAST_POS;
@@ -182,7 +188,8 @@ public class Board {
     for( int i = 0; i < cellCount; ++i ) {
       if( 0 <= cells[i] ) {
         numOfPieces[cells[i]]++;
-        if( i < sideLength || sideLength * sideLength - sideLength <= i || i % sideLength == 0 || i % sideLength == sideLength - 1 ) {
+        if((i % sideLength) * (i / sideLength) % sideLength == 0) {
+        //if( i < sideLength || sideLength * sideLength - sideLength <= i || i % sideLength == 0 || i % sideLength == sideLength - 1 ) {
           numOfPieces[2 + cells[i]]++;
         }
       }
@@ -268,6 +275,85 @@ public class Board {
     }
     return numEuler;
   }
+  
+  public int[] dumpEulerNumber() {
+    int[] numEuler = new int[2];
+    numEuler[BLACK] = 0;
+    numEuler[WHITE] = 0;
+    int[] nQ1 = new int[2];
+    nQ1[BLACK] = 0;
+    nQ1[WHITE] = 0;
+    int[] nQ3 = new int[2];
+    nQ3[BLACK] = 0;
+    nQ3[WHITE] = 0;
+    int[] nQd = new int[2];
+    nQd[BLACK] = 0;
+    nQd[WHITE] = 0;
+    int[] sumColor = new int[2];
+    sumColor[BLACK] = 0;
+    sumColor[WHITE] = 0;
+    boolean[] onBoard = new boolean[4];
+    int x, y;
+    for( int i = -1; i < sideLength; i++ ) {
+      for( int j = -1; j < sideLength; j++ ) {
+        x = i;
+        y = j;
+        onBoard[0] = false;
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
+          onBoard[0] = true;
+          if( 0 <= cells[getPos( x, y )] )
+            sumColor[cells[getPos( x, y )]]++;
+        }
+        x = i + 1;
+        y = j;
+        onBoard[1] = false;
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
+          onBoard[1] = true;
+          if( 0 <= cells[getPos( x, y )] )
+            sumColor[cells[getPos( x, y )]]++;
+        }
+        x = i;
+        y = j + 1;
+        onBoard[3] = false;
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
+          onBoard[3] = true;
+          if( 0 <= cells[getPos( x, y )] )
+            sumColor[cells[getPos( x, y )]]++;
+        }
+        x = i + 1;
+        y = j + 1;
+        onBoard[2] = false;
+        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
+          onBoard[2] = true;
+          if( 0 <= cells[getPos( x, y )] )
+            sumColor[cells[getPos( x, y )]]++;
+        }
+        for( int color = 0; color <= 1; color++ ) {
+          switch( sumColor[color] ) {
+            case 1:
+              nQ1[color]++;
+              break;
+            case 2:
+              if( ( onBoard[0] && onBoard[2] && cells[getPos( i, j )] + cells[getPos( i + 1, j + 1 )] == 2 * color ) || ( onBoard[1] && onBoard[3] && cells[getPos( i + 1, j )] + cells[getPos( i, j + 1 )] == 2 * color ) )
+                nQd[color]++;
+              break;
+            case 3:
+              nQ3[color]++;
+              break;
+            default:
+              break;
+          }
+        }
+        sumColor[BLACK] = 0;
+        sumColor[WHITE] = 0;
+      }
+    }
+    for( int color = 0; color <= 1; color++ ) {
+      System.out.println("c: "+color+" nQ1: "+nQ1[color]+" nQ3: " + nQ3[color]+" 2nQd: "+(2 * nQd[color]));
+      numEuler[color] = ( nQ1[color] - nQ3[color] + 2 * nQd[color] ) / 4;
+    }
+    return numEuler;
+  }
 
   public boolean isGameOver() {
     return passNum == 2 || moves > 2 * cellCount || lastMove == RESIGN_MOVE;
@@ -337,6 +423,7 @@ public class Board {
   protected void addStone( int pos, int color ) {
     assert ( cells[pos] == EMPTY );
     cells[pos] = color;
+    zobristHashKey ^= zobrist.zArray[color][pos];
     empties.clear( pos );
     numberOfEmptyCells--;
   }
@@ -451,6 +538,7 @@ public class Board {
       }
     }
     cells[pos] = EMPTY;
+    zobristHashKey ^= zobrist.zArray[color][pos];
     nextInShape[pos] = pos;
     shapeAtPos[pos] = pos;
     lives[pos].clear();
@@ -590,5 +678,9 @@ public class Board {
 
   public double getKomi() {
     return komi;
+  }
+
+  public long getZobristHashKey() {
+    return zobristHashKey;
   }
 }

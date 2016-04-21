@@ -9,7 +9,4 @@ public class PlayerPolicy {
   public double  forceOfPrior  = 1.0;
   public boolean preferKill    = true;
   public int     ABP_DEPTH     = 3;
-
-  public PlayerPolicy() {
-  }
 }

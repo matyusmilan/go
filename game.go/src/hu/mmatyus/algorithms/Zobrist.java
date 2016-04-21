@@ -7,7 +7,7 @@ import java.security.*;
 
 public class Zobrist {
   private final SecureRandom random     = new SecureRandom();
-  private final long         zArray[][];
+  public final long         zArray[][];
   private final long         zWhiteMove = random64();
   private final int          size;
 
@@ -21,7 +21,7 @@ public class Zobrist {
     return random.nextLong();
   }
 
-  public void zobristFillArray() {
+  private void zobristFillArray() {
     for( int pos = 0; pos < size; pos++ ) {
       zArray[Board.BLACK][pos] = random64();
       zArray[Board.WHITE][pos] = random64();
