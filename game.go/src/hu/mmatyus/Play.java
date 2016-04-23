@@ -1,40 +1,34 @@
 package hu.mmatyus;
 
-import hu.mmatyus.algorithms.NegaMaxRobot;
-import hu.mmatyus.algorithms.UCT_Robot;
-import hu.mmatyus.algorithms.Zobrist;
 import hu.mmatyus.gui.BoardDisplay;
 import hu.mmatyus.model.Board;
-import hu.mmatyus.model.BoardEval;
-import hu.mmatyus.model.BoardType;
 import hu.mmatyus.model.GameConfig;
-import hu.mmatyus.model.PlayerPolicy;
-import hu.mmatyus.model.Robot;
 
 public class Play {
-  public static final int       AMOUNT_OF_HANDICAP = 0;
-  public static final String    TITLE              = "{\u03C9} GOmega";
-  public static final int       COMPUTER           = Board.BLACK;
-  public static final double    KOMI               = 6.5;
+  public static final int    AMOUNT_OF_HANDICAP = 0;
+  public static final String TITLE              = "{\u03C9} GOmega";
+  public static final int    COMPUTER           = Board.BLACK;
+  public static final double KOMI               = 6.5;
 
   public static void main( String[] args ) throws Exception {
     GameConfig gameConfig = new GameConfig();
-    
+
     final Board board = new Board( gameConfig.getBoardType(), AMOUNT_OF_HANDICAP, KOMI );
 
     final BoardDisplay display = new BoardDisplay( board, gameConfig, TITLE );
-    
+
     //final Robot computer = new UCT_Robot( new PlayerPolicy() );
 
-    final Robot computer = new NegaMaxRobot( 3 );
-    
-    display.setComputerColor( COMPUTER );
+    //final Robot computer = new NegaMaxRobot( 3 );
 
-    
-    if( board.getNextPlayer() == COMPUTER ) {
-      board.move( computer.move( board ) );
-      display.update();
-    }
+    //display.setComputerColor( COMPUTER );
+
+    /*
+     * if( board.getNextPlayer() == COMPUTER ) {
+     * board.move( computer.move( board ) );
+     * display.update();
+     * }
+     */
 
 //    display.setListener( new BoardDisplay.Listener() {
 //      @Override
@@ -57,6 +51,6 @@ public class Play {
 //        }
 //      }
 //    } );
-    
+
   }
 }

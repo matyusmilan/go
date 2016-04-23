@@ -50,7 +50,6 @@ public class BoardDisplay extends Frame {
 
   Board                   board;
   GameConfig              gameConfig;
-  int                     computer;
   Listener                listener;
   boolean                 gameInProgress;
   public int              settingsWindow = 0;
@@ -150,7 +149,7 @@ public class BoardDisplay extends Frame {
    * @param pos
    *          Linear position on board.
    */
-  void onCellClick( int pos ) {
+  public void onCellClick( int pos ) {
     if( !board.isLegalMove( pos ) )
       return;
     board.move( pos );
@@ -181,10 +180,6 @@ public class BoardDisplay extends Frame {
     canvas.re_display( canvas.getGraphics() );
   }
 
-  public void setComputerColor( int computerColor ) {
-    this.computer = computerColor;
-  }
-
   public interface Listener {
     void onSuccess( double score );
 
@@ -211,6 +206,7 @@ public class BoardDisplay extends Frame {
   }
 
   class DispCanvas extends Canvas {
+
     PlayerGraphic blackPlayer = PlayerGraphic.HUMAN;
     PlayerGraphic whitePlayer = PlayerGraphic.HUMAN;
 
@@ -251,18 +247,12 @@ public class BoardDisplay extends Frame {
 
       // draw board
       if( board != null ) {
-
+        blackPlayer = (Player.Type.COMPUTER == gameConfig.getPlayers()[Board.BLACK].type) ? PlayerGraphic.COMPUTER : PlayerGraphic.HUMAN;
+        whitePlayer = (Player.Type.COMPUTER == gameConfig.getPlayers()[Board.WHITE].type) ? PlayerGraphic.COMPUTER : PlayerGraphic.HUMAN;
         font1 = font0.deriveFont( 48F );
         g2d.setFont( font1 );
         FontMetrics metrics = g2d.getFontMetrics( font1 );
         g2d.setColor( brownColor );
-
-        if( Board.BLACK == computer ) {
-          blackPlayer = PlayerGraphic.COMPUTER;
-        }
-        if( Board.WHITE == computer ) {
-          whitePlayer = PlayerGraphic.COMPUTER;
-        }
 
         g2d.drawString( blackPlayer.name, 1200 - metrics.stringWidth( blackPlayer.name ) / 2, 180 );
         g2d.drawString( whitePlayer.name, 1200 - metrics.stringWidth( whitePlayer.name ) / 2, 480 );
@@ -501,4 +491,5 @@ public class BoardDisplay extends Frame {
       g2d.drawString( "Resign", 1380, 360 );
     }
   }
+
 }

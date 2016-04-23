@@ -4,8 +4,8 @@ import hu.mmatyus.model.Player.Type;
 
 public class GameConfig {
   public static final BoardType DEFAULT_BOARD_TYPE = BoardType.SMALL;
-  public static final GameType DEFAULT_GAME_TYPE = GameType.CVH;
-  public static final Player DEFAULT_BLACK = new Player(Type.COMPUTER, Algorithm.UCT, 1);
+  public static final GameType DEFAULT_GAME_TYPE = GameType.HVH;
+  public static final Player DEFAULT_BLACK = new Player(Type.HUMAN);
   public static final Player DEFAULT_WHITE = new Player(Type.HUMAN);
   public static final int DEFAULT_HANDICAP = 0;
   

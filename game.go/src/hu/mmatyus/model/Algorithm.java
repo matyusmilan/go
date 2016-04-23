@@ -3,8 +3,8 @@ package hu.mmatyus.model;
 public enum Algorithm {
   UCT ("Monte-Carlo Tree Search + UCT", "Node count", new int[]{ 100_000, 300_000, 500_000 } )
   , NEGAMAX( "NegaMax", "Depth" , new int[]{ 3, 4, 5} )
-  , NEGAMAX_ALPHABETA("Apha-Beta pruning", "Depth" , new int[]{ 3, 4, 5} )
-  , NEGASCOUT( "Negascout" , "Depth", new int[]{ 3, 4, 5} )
+  , NEGAMAX_AB("NegaMax + AB", "Depth" , new int[]{ 3, 4, 5} )
+  , NEGAMAX_AB_TT( "NegaMax + AB + TT" , "Depth", new int[]{ 3, 4, 5} )
   ;
   
   Algorithm(String label, String optionName, int[] options)
@@ -19,7 +19,7 @@ public enum Algorithm {
   {
     return options.length;
   }
-  int option(int idx)
+  public int option(int idx)
   {
     return options[idx];
   }

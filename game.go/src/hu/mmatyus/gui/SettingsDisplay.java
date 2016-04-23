@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
-import javax.swing.JOptionPane;
 
 public class SettingsDisplay extends Frame {
   private static final long  serialVersionUID = 1L;
@@ -71,6 +70,12 @@ public class SettingsDisplay extends Frame {
         if( wizardPage < 3 ) {
           //b.drawImage( btnNext, 1400, 830, null );
           if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 830 <= e.getPoint().y && e.getPoint().y <= 860 ) {
+            if(wizardPage == 2 && gameConfig.getGameType() == GameType.HVH){
+              System.out.println( "START" );
+              setVisible( false );
+              client.onSuccess( gameConfig );
+              return;
+            }
             System.out.println( "NEXT" );
             wizardPage++;
           }
@@ -93,9 +98,10 @@ public class SettingsDisplay extends Frame {
 
         int padding = 50;
         int i = 0;
+        Player[] players = new Player[2];
         switch( wizardPage ) {
           case 0:
-            padding = 400;
+            padding = 500;
             for( BoardType bt : BoardType.values() ) {
               if( bt != gameConfig.getBoardType() ) {
                 if( 130 + padding * i <= e.getPoint().x && e.getPoint().x <= 130 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
@@ -115,22 +121,83 @@ public class SettingsDisplay extends Frame {
               }
               i++;
             }
+            Player defaultComputer = new Player( Player.Type.COMPUTER, Algorithm.UCT, 1 );
+            Player defaultHuman = new Player( Player.Type.HUMAN );
+            switch(  gameConfig.getGameType()  ) {
+              case CVC:
+                players[Board.BLACK] = defaultComputer;
+                players[Board.WHITE] = defaultComputer;
+                break;
+              case CVH:
+                players[Board.BLACK] = defaultComputer;
+                players[Board.WHITE] = defaultHuman;                  
+                break;
+              case HVC:
+                players[Board.BLACK] = defaultHuman;
+                players[Board.WHITE] = defaultComputer;                  
+                break;
+              case HVH:
+                players[Board.BLACK] = defaultHuman;
+                players[Board.WHITE] = defaultHuman;
+                break;
+            }
+            gameConfig.setPlayers( players );
+            System.out.println(gameConfig.getGameType().name());
+            System.out.println(gameConfig.getPlayers()[Board.BLACK].type + " -vs- " + gameConfig.getPlayers()[Board.WHITE].type);
             break;
           case 2:
             padding = 60;
             for( int h = 0; h <= Handicap.MAX; h++ ) {
               if( h != gameConfig.getHandicap() ) {
-                if( ( ( h % 2 == 0 ) ? 90 : 600 ) <= e.getPoint().x && e.getPoint().x <= ( ( h % 2 == 0 ) ? 90 : 600 ) + 150 && (int)h / 2 * padding + 230 <= e.getPoint().y && e.getPoint().y <= (int)h / 2 * padding + 230 + 30 ) {
+                if( ( ( h < 5 ) ? 90 : 600 ) <= e.getPoint().x && e.getPoint().x <= ( ( h < 5 ) ? 90 : 600 ) + 150 && ( h % 5 + 1 ) * padding + 230 <= e.getPoint().y && e.getPoint().y <= ( h % 5 + 1 ) * padding + 230 + 30 ) {
                   gameConfig.setHandicap( h );
                 }
               }
             }
+
             break;
           case 3:
-            JOptionPane.showMessageDialog( null, "3" );
-            break;
-          default:
-            JOptionPane.showMessageDialog( null, "default????" );
+            i = 0;
+            padding = 45;
+            players = gameConfig.getPlayers();
+            for( Algorithm alg : Algorithm.values() ) {
+              if( players[Board.BLACK].type == Player.Type.COMPUTER ) {
+                if(alg != players[Board.BLACK].algo){
+                  if(100 <= e.getPoint().x && e.getPoint().x <= 100 + 300 && i * padding + 435  <= e.getPoint().y && e.getPoint().y <= i * padding + 435 + 30){
+                    players[Board.BLACK].algo = alg;
+                    gameConfig.setPlayers( players );
+                  }
+                }
+              }
+              if( players[Board.WHITE].type == Player.Type.COMPUTER ) {
+                if(alg != players[Board.WHITE].algo){
+                  if(700 <= e.getPoint().x && e.getPoint().x <= 700 + 300 && i * padding + 435  <= e.getPoint().y && e.getPoint().y <= i * padding + 435 + 30){
+                    players[Board.WHITE].algo = alg;
+                    gameConfig.setPlayers( players );
+                  }
+                }
+              }
+              i++;
+            }
+            String[] strength_label = { "Easy", "Medium", "Hard" };
+            for( int s = 0; s < strength_label.length; s++ ) {
+              if( players[Board.BLACK].type == Player.Type.COMPUTER ) {
+                if (s != players[Board.BLACK].param){
+                  if(100 <= e.getPoint().x && e.getPoint().x <= 100 + 100 && i * padding + 660  <= e.getPoint().y && e.getPoint().y <= i * padding + 660 + 30){
+                    players[Board.BLACK].param = s;
+                    gameConfig.setPlayers( players );
+                  }
+                }
+              }
+              if( players[Board.WHITE].type == Player.Type.COMPUTER ) {
+                if (s != players[Board.WHITE].param){
+                  if(700 <= e.getPoint().x && e.getPoint().x <= 700 + 100 && i * padding + 660  <= e.getPoint().y && e.getPoint().y <= i * padding + 660 + 30){
+                    players[Board.WHITE].param = s;
+                    gameConfig.setPlayers( players );
+                  }
+                }
+              }
+            }
             break;
         }
         canvas.update( canvas.getGraphics() );
@@ -206,7 +273,10 @@ public class SettingsDisplay extends Frame {
       font1 = font0.deriveFont( 48F );
       g2d.setFont( font1 );
       if( wizardPage < 3 ) {
-        g0.drawImage( btnNext, 1400, 830, null );
+        if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH )
+          g0.drawImage( btnStart, 1400, 830, null );
+        else
+          g0.drawImage( btnNext, 1400, 830, null );
       } else {
         g0.drawImage( btnStart, 1400, 830, null );
       }
@@ -257,15 +327,15 @@ public class SettingsDisplay extends Frame {
           g2d.setFont( font1 );
           padding = 60;
           for( int h = 0; h <= Handicap.MAX; h++ ) {
-            g0.drawImage( ( h == gameConfig.getHandicap() ) ? btnRadioOn : btnRadioOff, ( h % 2 == 0 ) ? 90 : 600, (int)h / 2 * padding + 230, null );
-            g2d.drawString( h + " stone" + ( ( h == 1 ) ? "" : "s" ), ( h % 2 == 0 ) ? 120 : 630, (int)h / 2 * padding + 250 );
+            g0.drawImage( ( h == gameConfig.getHandicap() ) ? btnRadioOn : btnRadioOff, ( h < 5 ) ? 90 : 600, ( h % 5 + 1 ) * padding + 230, null );
+            g2d.drawString( h + " stone" + ( ( h == 1 ) ? "" : "s" ), ( h < 5 ) ? 120 : 630, ( h % 5 + 1 ) * padding + 250 );
           }
           break;
         case 3:
           drawtabString( g2d, "1.) Board size:\t\t\t\t\t\t" + gameConfig.getBoardType().name() + " (" + gameConfig.getBoardType().label + ")", 10, 100 );
           drawtabString( g2d, "2.) Game type:\t\t\t\t\t\t" + gameConfig.getGameType().label, 10, 150 );
           drawtabString( g2d, "3.) Set handicap:\t\t\t\t\t\t" + gameConfig.getHandicap(), 10, 200 );
-          drawtabString( g2d, "3.) Computer: ", 10, 250 );
+          drawtabString( g2d, "4.) Computer: ", 10, 250 );
           drawtabString( g2d, "a.) Algorithm: ", 10, 410 );
           drawtabString( g2d, "b.) Strength: ", 10, 640 );
           g2d.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, .2f ) );
@@ -283,14 +353,28 @@ public class SettingsDisplay extends Frame {
           padding = 45;
           String[] strength_label = { "Easy", "Medium", "Hard" };
           for( Algorithm alg : Algorithm.values() ) {
-            g0.drawImage( ( alg == players[Board.BLACK].algo ) ? btnRadioOn : btnRadioOff, 100, i * padding + 435, null );
-            g2d.drawString( alg.label, 130, i * padding + 460 );
+            if( players[Board.BLACK].type == Player.Type.COMPUTER ) {
+              g0.drawImage( ( alg == players[Board.BLACK].algo ) ? btnRadioOn : btnRadioOff, 100, i * padding + 435, null );
+              g2d.drawString( alg.label, 130, i * padding + 460 );
+            }
+
+            if( players[Board.WHITE].type == Player.Type.COMPUTER ) {
+              g0.drawImage( ( alg == players[Board.WHITE].algo ) ? btnRadioOn : btnRadioOff, 700, i * padding + 435, null );
+              g2d.drawString( alg.label, 730, i * padding + 460 );
+            }
+
             i++;
           }
           i = 0;
           for( int s = 0; s < strength_label.length; s++ ) {
-            g0.drawImage( ( s == players[Board.BLACK].param ) ? btnRadioOn : btnRadioOff, 100, i * padding + 660, null );
-            g2d.drawString( strength_label[s], 130, i * padding + 685 );
+            if( players[Board.BLACK].type == Player.Type.COMPUTER ) {
+              g0.drawImage( ( s == players[Board.BLACK].param ) ? btnRadioOn : btnRadioOff, 100, i * padding + 660, null );
+              g2d.drawString( strength_label[s], 130, i * padding + 685 );
+            }
+            if( players[Board.WHITE].type == Player.Type.COMPUTER ) {
+              g0.drawImage( ( s == players[Board.WHITE].param ) ? btnRadioOn : btnRadioOff, 700, i * padding + 660, null );
+              g2d.drawString( strength_label[s], 730, i * padding + 685 );
+            }
             i++;
           }
           break;

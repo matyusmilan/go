@@ -3,7 +3,10 @@ package hu.mmatyus.algorithms;
 import hu.mmatyus.algorithms.tt.TranspositionTable;
 import hu.mmatyus.algorithms.tt.TranspositionTableEntry;
 import hu.mmatyus.algorithms.tt.TranspositionTableEntry.Type;
+import hu.mmatyus.model.Algorithm;
 import hu.mmatyus.model.Board;
+import hu.mmatyus.model.GameConfig;
+import hu.mmatyus.model.Player;
 import hu.mmatyus.model.Robot;
 
 import java.util.ArrayList;
@@ -11,14 +14,24 @@ import java.util.List;
 
 public class NegaMaxRobot implements Robot {
   public static final int    MAX_RUN_DEPTH = 7;
+  private final Algorithm    algorithm;
   private final int          runDepth;
   private int                counting;
   private TranspositionTable table         = new TranspositionTable();
 
-  public NegaMaxRobot( int runDepth ) {
-    if( runDepth > MAX_RUN_DEPTH )
+  /*
+   * public NegaMaxRobot( int runDepth ) {
+   * if( runDepth > MAX_RUN_DEPTH )
+   * throw new IllegalStateException( "PROGRAMMER ERROR" );
+   * this.runDepth = runDepth;
+   * }
+   */
+
+  public NegaMaxRobot( Player player ) {
+    if( player.type != Player.Type.COMPUTER || player.algo == Algorithm.UCT )
       throw new IllegalStateException( "PROGRAMMER ERROR" );
-    this.runDepth = runDepth;
+    this.algorithm = player.algo;
+    this.runDepth = algorithm.option( player.param );
   }
 
   @Override
@@ -30,9 +43,23 @@ public class NegaMaxRobot implements Robot {
       return ( board.getNumberOfCells() - 1 ) / 2;
     Board myBoard = board.clone();
     counting = 0;
+    int[] result = null;
+    switch( algorithm ) {
+      case NEGAMAX:
+       result = NegaMax( myBoard, runDepth, 1 );
+        break;
+      case NEGAMAX_AB:
+        result = Negamax_AB( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
+        break;
+      case NEGAMAX_AB_TT:
+        result = Negamax_AB_TT( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
+        break;
+      default:
+        throw new IllegalStateException( "PROGRAMMER ERROR" );
+    }
     //int[] result = negaMax( myBoard, runDepth, 1 );
     //int[] result = alphaBetaPruning( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
-    int[] result = alphaBetaPruningWithTranspositionTable( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
+    //int[] result = alphaBetaPruningWithTranspositionTable( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
     bestMove = result[0];
     System.out.println( "Lépésszám: " + counting );
     if( result[1] < 0 )
@@ -41,7 +68,7 @@ public class NegaMaxRobot implements Robot {
     return bestMove;
   }
 
-  private int[] negaMax( Board board, int depth, int sign ) {
+  private int[] NegaMax( Board board, int depth, int sign ) {
     counting++;
     int[] result = new int[2];
     result[0] = Integer.MIN_VALUE;
@@ -57,7 +84,7 @@ public class NegaMaxRobot implements Robot {
         continue;
       Board newBoard = board.clone();
       newBoard.move( pos );
-      int[] subResult = negaMax( newBoard, depth - 1, -sign );
+      int[] subResult = NegaMax( newBoard, depth - 1, -sign );
       subResult[1] = -subResult[1];
       if( subResult[1] > result[1] ) {
         result[0] = pos;
@@ -69,7 +96,7 @@ public class NegaMaxRobot implements Robot {
     return result;
   }
 
-  private int[] alphaBetaPruning( Board board, int depth, int alpha, int beta, int sign ) {
+  private int[] Negamax_AB( Board board, int depth, int alpha, int beta, int sign ) {
     counting++;
     int[] result = new int[2];
     result[0] = Integer.MIN_VALUE;
@@ -84,7 +111,7 @@ public class NegaMaxRobot implements Robot {
         continue;
       Board newBoard = board.clone();
       newBoard.move( pos );
-      int[] subResult = alphaBetaPruning( newBoard, depth - 1, -beta, -alpha, -sign );
+      int[] subResult = Negamax_AB( newBoard, depth - 1, -beta, -alpha, -sign );
       subResult[1] = -subResult[1];
       if( subResult[1] > result[1] ) {
         result[0] = pos;
@@ -97,7 +124,7 @@ public class NegaMaxRobot implements Robot {
     return result;
   }
 
-  private int[] alphaBetaPruningWithTranspositionTable( Board board, int depth, int alpha, int beta, int sign ) {
+  private int[] Negamax_AB_TT( Board board, int depth, int alpha, int beta, int sign ) {
     counting++;
     int[] result = new int[2];
     result[0] = Integer.MIN_VALUE;
@@ -137,7 +164,7 @@ public class NegaMaxRobot implements Robot {
         continue;
       Board newBoard = board.clone();
       newBoard.move( pos );
-      int[] subResult = alphaBetaPruningWithTranspositionTable( newBoard, depth - 1, -beta, -alpha, -sign );
+      int[] subResult = Negamax_AB_TT( newBoard, depth - 1, -beta, -alpha, -sign );
       subResult[1] = -subResult[1];
       if( subResult[1] > result[1] ) {
         result[0] = pos;
@@ -152,11 +179,12 @@ public class NegaMaxRobot implements Robot {
       table.addResult( board.getZobristHashKey(), Type.LOWERBOUND, result[0], result[1], depth );
     else if( result[1] >= beta ) // an upperbound value
       table.addResult( board.getZobristHashKey(), Type.LOWERBOUND, result[0], result[1], depth );
-    else       // a true minimax value
+    else
+      // a true minimax value
       table.addResult( board.getZobristHashKey(), Type.EXACT_VALUE, result[0], result[1], depth );
     return result;
   }
-
+/*
   private int positionScore( int boardSize, int pos ) {
     final int cx = boardSize / 2;
     final int cy = boardSize / 2;
@@ -182,7 +210,7 @@ public class NegaMaxRobot implements Robot {
     }
     return result;
   }
-
+*/
   private int evaluateStrategy( Board board ) {
     int us = 1 - board.getNextPlayer();
     int score = 0;
@@ -196,7 +224,7 @@ public class NegaMaxRobot implements Robot {
       int cell = board.getState( pos );
       if( cell >= 0 ) {
         int ps = board.getLifeOfShape( pos );
-        if(counted[ps] == 0 ){
+        if( counted[ps] == 0 ) {
           score += ( cell == us ? ps : 0 );
           counted[ps] = 1;
         }
@@ -213,7 +241,7 @@ public class NegaMaxRobot implements Robot {
     int[] euler = board.getEulerNumber();
     int[] numOfPieces = board.getNumOfPieces();
     //int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] ) + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - ( numOfPieces[2 + currentPlayer] - numOfPieces[2 + nextPlayer] );
-    int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] )  + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - 20*numOfPieces[2 + currentPlayer];
+    int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] ) + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - 20 * numOfPieces[2 + currentPlayer];
     return score;
   }
 }
