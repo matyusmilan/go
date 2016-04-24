@@ -1,8 +1,6 @@
 package hu.mmatyus;
 
-import hu.mmatyus.gui.BoardDisplay;
 import hu.mmatyus.model.Board;
-import hu.mmatyus.model.GameConfig;
 
 public class Play {
   public static final int    AMOUNT_OF_HANDICAP = 0;
@@ -11,11 +9,11 @@ public class Play {
   public static final double KOMI               = 6.5;
 
   public static void main( String[] args ) throws Exception {
-    GameConfig gameConfig = new GameConfig();
+    //GameConfig gameConfig = new GameConfig();
 
-    final Board board = new Board( gameConfig.getBoardType(), AMOUNT_OF_HANDICAP, KOMI );
+    //final Board board = new Board( gameConfig.getBoardType(), AMOUNT_OF_HANDICAP, KOMI );
 
-    final BoardDisplay display = new BoardDisplay( board, gameConfig, TITLE );
+    // final BoardDisplay display = new BoardDisplay( board, gameConfig, TITLE );
 
     //final Robot computer = new UCT_Robot( new PlayerPolicy() );
 

@@ -20,7 +20,7 @@ import javax.swing.JOptionPane;
 
 public class Play2 {
   public static final double KOMI  = 6.5;
-  public static final String TITLE = "{\u03C9} GOmega";
+  public static final String TITLE = "g(\u03C9) – GOmega / On Board";
 
   public static void main( String[] args ) throws IOException, FontFormatException {
     final Listener boardClient = new Listener() {
@@ -79,7 +79,7 @@ public class Play2 {
 
       @Override
       public void onFailure( Exception e ) {
-        //JOptionPane.showMessageDialog( null, e, TITLE, JOptionPane.ERROR_MESSAGE );
+        JOptionPane.showMessageDialog( null, e, TITLE, JOptionPane.ERROR_MESSAGE );
         System.exit( -1 );
       }
     };
