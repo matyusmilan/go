@@ -1,25 +1,17 @@
 package hu.mmatyus.gui;
 
 import java.awt.Canvas;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FontFormatException;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 
 import javax.imageio.ImageIO;
 
@@ -31,12 +23,11 @@ public class StartDisplay extends Frame {
   public static final String GO_RULES_URL     = "http://www.britgo.org/intro/intro2.html";
   private Client             client;
   private StartCanvas        canvas           = new StartCanvas();
-  private static final int   btnMainX         = 210;
-  private static final int   btnMainY         = 550;
-  private static final int   btnMainPadding   = 70;
-  private static final int   btnMainWidth     = 200;
-  private static final int   btnMainHight     = 40;
-  public static final int    amountOfbtnMain  = 3;
+  private static final int   BTN_X_POS         = 210;
+  private static final int   BTN_Y_POS         = 550;
+  private static final int   BTN_PADDING   = 70;
+  private static final int   BTN_WIDTH     = 200;
+  private static final int   BTN_HEIGHT     = 40;
 
   public interface Client {
     void onSuccess();
@@ -80,7 +71,7 @@ public class StartDisplay extends Frame {
       public void mouseClicked( MouseEvent e ) {
         int paddingMultiplier = 0;
         for( StartButton sb : StartButton.values() ) {
-          if( btnMainX <= e.getPoint().x && e.getPoint().x <= btnMainX + btnMainWidth && btnMainY + paddingMultiplier * btnMainPadding <= e.getPoint().y && e.getPoint().y <= btnMainY + paddingMultiplier * btnMainPadding + btnMainHight ) {
+          if( BTN_X_POS <= e.getPoint().x && e.getPoint().x <= BTN_X_POS + BTN_WIDTH && BTN_Y_POS + paddingMultiplier * BTN_PADDING <= e.getPoint().y && e.getPoint().y <= BTN_Y_POS + paddingMultiplier * BTN_PADDING + BTN_HEIGHT ) {
             switch( sb ) {
               case NEW_GAME:
                 System.out.println( "NEW_GAME" );
@@ -127,13 +118,12 @@ public class StartDisplay extends Frame {
       final Dimension dim = getSize();
       Image offscreen = createImage( dim.width, dim.height );
       Graphics g0 = offscreen.getGraphics();
-      // currentGraphics = g0;
 
       g0.drawImage( background, 0, 0, null );
 
       paddingMultiplier = 0;
       for( Image startBtn : startButtons ) {
-        g0.drawImage( startBtn, btnMainX, btnMainY + paddingMultiplier * btnMainPadding, null );
+        g0.drawImage( startBtn, BTN_X_POS, BTN_Y_POS + paddingMultiplier * BTN_PADDING, null );
         paddingMultiplier++;
       }
 

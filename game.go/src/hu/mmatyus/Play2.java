@@ -23,10 +23,12 @@ public class Play2 {
   public static final String TITLE = "g(\u03C9) – GOmega / On Board";
 
   public static void main( String[] args ) throws IOException, FontFormatException {
+   
     final Listener boardClient = new Listener() {
       @Override
       public void onSuccess( double score ) {
         JOptionPane.showMessageDialog( null, "Signed advance on black: " + score, TITLE, JOptionPane.INFORMATION_MESSAGE );
+        System.exit( 0 );
       }
 
       @Override
@@ -46,14 +48,14 @@ public class Play2 {
         Robot blackRobot = null, whiteRobot = null;
         if( players[Board.BLACK].type == Player.Type.COMPUTER ) {
           if( players[Board.BLACK].algo == Algorithm.UCT ) {
-            blackRobot = new UCT_Robot( new PlayerPolicy() );
+            blackRobot = new UCT_Robot( new PlayerPolicy(Algorithm.UCT.option( players[Board.BLACK].param)) );
           } else {
             blackRobot = new NegaMaxRobot( players[Board.BLACK] );
           }
         }
         if( players[Board.WHITE].type == Player.Type.COMPUTER ) {
           if( players[Board.WHITE].algo == Algorithm.UCT ) {
-            whiteRobot = new UCT_Robot( new PlayerPolicy() );
+            whiteRobot = new UCT_Robot( new PlayerPolicy(Algorithm.UCT.option( players[Board.WHITE].param)) );
           } else {
             whiteRobot = new NegaMaxRobot( players[Board.WHITE] );
           }
@@ -84,8 +86,10 @@ public class Play2 {
       }
     };
 
-    SettingsDisplay sd = new SettingsDisplay( settingsClient );
-    sd.setVisible( true );
+    SettingsDisplay settingsDisplay = new SettingsDisplay( settingsClient );
+    settingsDisplay.setVisible( true );
+
+
   }
 
 }

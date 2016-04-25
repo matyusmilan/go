@@ -203,8 +203,8 @@ public class SettingsDisplay extends Frame {
                 }
               }
             }
-            System.out.println( gameConfig.getPlayers()[Board.BLACK].algo.name()+" "+ strength_label[gameConfig.getPlayers()[Board.BLACK].param]);
-            System.out.println( gameConfig.getPlayers()[Board.WHITE].algo.name()+" "+ strength_label[gameConfig.getPlayers()[Board.WHITE].param]);
+            //System.out.println( gameConfig.getPlayers()[Board.BLACK].algo.name()+" "+ strength_label[gameConfig.getPlayers()[Board.BLACK].param]);
+            //System.out.println( gameConfig.getPlayers()[Board.WHITE].algo.name()+" "+ strength_label[gameConfig.getPlayers()[Board.WHITE].param]);
             break;
         }
         canvas.update( canvas.getGraphics() );

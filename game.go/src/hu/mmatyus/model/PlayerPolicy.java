@@ -8,5 +8,8 @@ public class PlayerPolicy {
   public boolean useUCBPrior   = true;
   public double  forceOfPrior  = 1.0;
   public boolean preferKill    = true;
-  public int     ABP_DEPTH     = 3;
+  
+  public PlayerPolicy(int amountOfIteration) {
+    this.iterations = amountOfIteration;
+  }
 }
