@@ -101,22 +101,16 @@ public class BoardDisplay extends Frame {
                 click( x, y );
             }
           } else {
-            if( board.getNextPlayer() == Board.WHITE ) {
-              if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 520 <= e.getPoint().y && e.getPoint().y <= 620 ) {
-                System.out.println( "WHITE clicked the PASS button!" );
-                onCellClick( Board.PASS_MOVE );
-              } else if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 620 <= e.getPoint().y && e.getPoint().y <= 720 ) {
-                System.out.println( "WHITE clicked the RESIGN button!" );
-                onCellClick( Board.RESIGN_MOVE );
-              }
-            }
-            if( board.getNextPlayer() == Board.BLACK ) {
-              if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 220 <= e.getPoint().y && e.getPoint().y <= 320 ) {
-                System.out.println( "BLACK clicked the PASS button!" );
-                onCellClick( Board.PASS_MOVE );
-              } else if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 320 <= e.getPoint().y && e.getPoint().y <= 420 ) {
-                System.out.println( "BLACK clicked the RESIGN button!" );
-                onCellClick( Board.RESIGN_MOVE );
+            int padding = 300;
+            for(int color = 0; color < 2; color++){
+              if(board.getNextPlayer() == color) {
+                if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 520 - color*padding <= e.getPoint().y && e.getPoint().y <= 620 - color*padding ) {
+                  System.out.println( (color == 0)?"WHITE":"BLACK" + " clicked the PASS button!" );
+                  onCellClick( Board.PASS_MOVE );
+                } else if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 620 - color*padding <= e.getPoint().y && e.getPoint().y <= 720 - color*padding) {
+                  System.out.println( (color == 0)?"WHITE":"BLACK" + " clicked the RESIGN button!" );
+                  onCellClick( Board.RESIGN_MOVE );
+                }
               }
             }
             update();
@@ -137,12 +131,15 @@ public class BoardDisplay extends Frame {
       onCellClick( pos );
     }
   }
-
-  boolean nextIsHuman() {
+  /**
+   * Kell ez még...  a táblán az ember / robot lépés váltására
+   */
+  private boolean nextIsHuman() {
     final int playerIdx = board.getNextPlayer();
     final Player player = gameConfig.getPlayers()[playerIdx];
     return ( player.type == Player.Type.HUMAN );
   }
+  
 
   /**
    * Next player moves.
@@ -167,11 +164,6 @@ public class BoardDisplay extends Frame {
     this.eval = eval;
     update();
   }
-
-//  @Override
-//  public Graphics getGraphics() {
-//    return currentGraphics;
-//  }
 
   public void setListener( Listener l ) {
     listener = l;

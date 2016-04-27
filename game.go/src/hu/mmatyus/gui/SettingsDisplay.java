@@ -298,32 +298,24 @@ public class SettingsDisplay extends Frame {
 
       switch( wizardPage ) {
         case 0:
-          //g2d.drawString( "1.) Board size: ", 50, 100 );
           drawtabString( g2d, "1.) Board size: ", 10, 100 );
           i = 0;
           font1 = font0.deriveFont( 32F );
           g2d.setFont( font1 );
           padding = 500;
           for( BoardType bt : BoardType.values() ) {
-            g0.drawImage( ( bt == gameConfig.getBoardType() ) ? btnSetBoardType.get( "btnBoard" + bt.name() + "on" ) : btnSetBoardType.get( "btnBoard" + bt.name() + "off" ), 130 + padding * i, 220, null );
-            //g2d.drawString( "" + bt.name().toLowerCase() + " (" + bt.label + ")", 220 + padding * i, 200 );
-            i++;
+            g0.drawImage( ( bt == gameConfig.getBoardType() ) ? btnSetBoardType.get( "btnBoard" + bt.name() + "on" ) : btnSetBoardType.get( "btnBoard" + bt.name() + "off" ), 130 + padding * i++, 220, null );
           }
           break;
         case 1:
           drawtabString( g2d, "1.) Board size:\t\t\t\t\t\t" + gameConfig.getBoardType().name() + " (" + gameConfig.getBoardType().label + ")", 10, 100 );
           drawtabString( g2d, "2.) Game type:", 10, 150 );
-          //g2d.drawString( "1.) Board size: " + gameConfig.getBoardType().name() + " (" + gameConfig.getBoardType().label + ")", 50, 100 );
-          //g2d.drawString( "2.) Game type: ", 50, 150 );
           i = 0;
           padding = 380;
           font1 = font0.deriveFont( 32F );
           g2d.setFont( font1 );
           for( GameType gt : GameType.values() ) {
-            //System.out.println(btnSetBoardType.get( "btnGameType" + gt.name() + "off"));
-            g0.drawImage( ( gt == gameConfig.getGameType() ) ? btnSetGameType.get( "btnGameType" + gt.name() + "on" ) : btnSetGameType.get( "btnGameType" + gt.name() + "off" ), 50 + padding * i, 220, null );
-            //g2d.drawString( gt.label, 80 + padding * i, 200 );
-            i++;
+            g0.drawImage( ( gt == gameConfig.getGameType() ) ? btnSetGameType.get( "btnGameType" + gt.name() + "on" ) : btnSetGameType.get( "btnGameType" + gt.name() + "off" ), 50 + padding * i++, 220, null );
           }
           break;
         case 2:
