@@ -1,7 +1,7 @@
 package hu.mmatyus.gui;
 
 import hu.mmatyus.algorithms.NegaMaxRobot;
-import hu.mmatyus.algorithms.UCT_Robot;
+import hu.mmatyus.algorithms.uct.UCT_Robot;
 import hu.mmatyus.model.Algorithm;
 import hu.mmatyus.model.Board;
 import hu.mmatyus.model.BoardEvaluator;

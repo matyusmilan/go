@@ -1,4 +1,4 @@
-package hu.mmatyus.algorithms;
+package hu.mmatyus.algorithms.uct;
 
 public class UCB_Pair<Action> {
   protected UCB<Action> primary;

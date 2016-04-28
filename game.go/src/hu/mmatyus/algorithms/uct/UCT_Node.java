@@ -1,4 +1,4 @@
-package hu.mmatyus.algorithms;
+package hu.mmatyus.algorithms.uct;
 
 import hu.mmatyus.model.Game;
 import hu.mmatyus.model.PlayerPolicy;
