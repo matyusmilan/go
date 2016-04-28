@@ -6,8 +6,8 @@ public class Player {
     , COMPUTER
   }
   public final Type type;
-  public Algorithm algo;
-  public int param;
+  public final Algorithm algo;
+  public final int param;
   
   public Player(Type t, Algorithm a, int p){
     this.type = t;

@@ -1,11 +1,15 @@
 package hu.mmatyus.gui;
 
+import hu.mmatyus.algorithms.NegaMaxRobot;
+import hu.mmatyus.algorithms.UCT_Robot;
+import hu.mmatyus.model.Algorithm;
 import hu.mmatyus.model.Board;
-import hu.mmatyus.model.BoardEval;
+import hu.mmatyus.model.BoardEvaluator;
 import hu.mmatyus.model.GameConfig;
 import hu.mmatyus.model.Handicap;
 import hu.mmatyus.model.Player;
 import hu.mmatyus.model.PlayerPolicy;
+import hu.mmatyus.model.Robot;
 
 import java.awt.AlphaComposite;
 import java.awt.Canvas;
@@ -40,9 +44,11 @@ public class BoardDisplay extends Frame {
   public static final int WIDTH          = 1600;
   public static final int HEIGHT         = 900;
 
+  private final Object    parent;
+
   public char[]           letters;
   public int[]            currentWhiteType;     // There are 16 different white stone graphics
-  BoardEval               eval           = null;
+  BoardEvaluator          evaluator      = null;
   DispCanvas              canvas;
   Dimension               dim;
   int                     cell_size;
@@ -51,12 +57,11 @@ public class BoardDisplay extends Frame {
 
   Board                   board;
   GameConfig              gameConfig;
-  Listener                listener;
   boolean                 gameInProgress;
   public int              settingsWindow = 0;
 
-  public BoardDisplay( final Board board, final GameConfig gameConfig, String title ) throws IOException, FontFormatException {
-    super();
+  public BoardDisplay( final Object parent, final Board board, final GameConfig gameConfig, String title ) throws IOException, FontFormatException {
+    this.parent = parent;
     gameInProgress = false;
     // Initializing 'letters' with first sideLength alphabet's element
     letters = new char[board.boardType.sideLength];
@@ -81,7 +86,14 @@ public class BoardDisplay extends Frame {
     addWindowListener( new WindowAdapter() {
       @Override
       public void windowClosing( WindowEvent we ) {
-        System.exit( 0 );
+        dispose();
+      }
+      @Override
+      public void windowClosed( WindowEvent we ) {
+        Object p = BoardDisplay.this.parent;
+        synchronized( p ) {
+          p.notifyAll();
+        }
       }
     } );
 
@@ -90,7 +102,7 @@ public class BoardDisplay extends Frame {
     canvas.addMouseListener( new MouseAdapter() {
       @Override
       public void mousePressed( MouseEvent e ) {
-        if( !board.isGameOver() ) {
+        if( !board.isGameOver() && nextIsHuman()) {
           if( e.getPoint().y < HEIGHT && e.getPoint().x < HEIGHT ) {
             if( 0 < ( e.getPoint().x - CHANGE_POS ) * ( e.getPoint().y - CHANGE_POS ) ) {
               int x = ( e.getPoint().x - CHANGE_POS ) / cell_size;
@@ -102,14 +114,14 @@ public class BoardDisplay extends Frame {
             }
           } else {
             int padding = 300;
-            for(int color = 0; color < 2; color++){
-              if(board.getNextPlayer() == color) {
-                if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 520 - color*padding <= e.getPoint().y && e.getPoint().y <= 620 - color*padding ) {
-                  System.out.println( (color == 0)?"WHITE":"BLACK" + " clicked the PASS button!" );
-                  onCellClick( Board.PASS_MOVE );
-                } else if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 620 - color*padding <= e.getPoint().y && e.getPoint().y <= 720 - color*padding) {
-                  System.out.println( (color == 0)?"WHITE":"BLACK" + " clicked the RESIGN button!" );
-                  onCellClick( Board.RESIGN_MOVE );
+            for( int color = 0; color < 2; color++ ) {
+              if( board.getNextPlayer() == color ) {
+                if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 520 - color * padding <= e.getPoint().y && e.getPoint().y <= 620 - color * padding ) {
+                  System.out.println( ( color == 0 ) ? "WHITE" : "BLACK" + " clicked the PASS button!" );
+                  placeStone( Board.PASS_MOVE );
+                } else if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 620 - color * padding <= e.getPoint().y && e.getPoint().y <= 720 - color * padding ) {
+                  System.out.println( ( color == 0 ) ? "WHITE" : "BLACK" + " clicked the RESIGN button!" );
+                  placeStone( Board.RESIGN_MOVE );
                 }
               }
             }
@@ -123,23 +135,43 @@ public class BoardDisplay extends Frame {
     this.board = board;
     this.gameConfig = gameConfig;
     setVisible( true );
+
+    if( !nextIsHuman() ) {
+      robotMove();
+      update();
+    }
   }
 
   void click( int x, int y ) {
     int pos = board.getPos( x, y );
-    if( listener != null ) {
-      onCellClick( pos );
-    }
+    placeStone( pos );
   }
-  /**
-   * Kell ez még...  a táblán az ember / robot lépés váltására
-   */
+
   private boolean nextIsHuman() {
     final int playerIdx = board.getNextPlayer();
     final Player player = gameConfig.getPlayers()[playerIdx];
     return ( player.type == Player.Type.HUMAN );
   }
-  
+
+  private void robotMove() {
+    final Robot r;
+    final Player p = gameConfig.getPlayers()[board.getNextPlayer()];
+    if( p.algo == Algorithm.UCT ) {
+      r = new UCT_Robot( new PlayerPolicy( Algorithm.UCT.option( p.param ) ) );
+    } else {
+      r = new NegaMaxRobot( p.algo, p.param );
+    }
+    final int robotIdea = r.move( board );
+    board.move( robotIdea );
+  }
+
+  void finishGame() {
+    evaluator = new BoardEvaluator( board, new PlayerPolicy( 300_000 ) );
+    final int EVAL_STEPS = 10000;
+    final double EVAL_THRESHOLD = 0.4;
+    evaluator.eval( EVAL_STEPS, EVAL_THRESHOLD );
+    update();
+  }
 
   /**
    * Next player moves.
@@ -147,36 +179,29 @@ public class BoardDisplay extends Frame {
    * @param pos
    *          Linear position on board.
    */
-  public void onCellClick( int pos ) {
+  public boolean placeStone( int pos ) {
     if( !board.isLegalMove( pos ) )
-      return;
+      return false;
     board.move( pos );
-    if( board.isGameOver() || board.getPassNum() == 2 ) {
-      this.setVisible( false );
-      BoardEval eval = new BoardEval( board, new PlayerPolicy(300_000) );
-      eval.eval( 10000, 0.4 );
-      listener.onSuccess( eval.getScore() );
+    update();
+    if( board.isGameOver() )
+      finishGame();
+    if( !nextIsHuman() ) {
+      robotMove();
+      update();
+      if( board.isGameOver() )
+        finishGame();
     }
-    update();
+    return true;
   }
 
-  public void setEval( BoardEval eval ) {
-    this.eval = eval;
+  public void setEval( BoardEvaluator eval ) {
+    this.evaluator = eval;
     update();
-  }
-
-  public void setListener( Listener l ) {
-    listener = l;
   }
 
   public void update() {
     canvas.re_display( canvas.getGraphics() );
-  }
-
-  public interface Listener {
-    void onSuccess( double score );
-
-    void onFailure( Exception e );
   }
 
   public enum PlayerGraphic {
@@ -189,7 +214,7 @@ public class BoardDisplay extends Frame {
     final Map<String, String> passLabel    = new HashMap<String, String>();
     final Map<String, String> resignLabel  = new HashMap<String, String>();
 
-    PlayerGraphic( String name, String actImgPath, String pasImgPath) {
+    PlayerGraphic( String name, String actImgPath, String pasImgPath ) {
       this.name = name;
       try {
         this.activeImg = ImageIO.read( new File( actImgPath ) );
@@ -368,8 +393,8 @@ public class BoardDisplay extends Frame {
             }
 
             // eval
-            if( eval != null ) {
-              double t = eval.getArea( pos );
+            if( evaluator != null ) {
+              double t = evaluator.getArea( pos );
               int size = 0;
               if( t < 0.5 ) {
                 size = (int) ( r * ( 0.5 - t ) );

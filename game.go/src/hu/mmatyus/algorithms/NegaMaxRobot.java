@@ -23,11 +23,9 @@ public class NegaMaxRobot implements Robot {
    * }
    */
 
-  public NegaMaxRobot( Player player ) {
-    if( player.type != Player.Type.COMPUTER || player.algo == Algorithm.UCT )
-      throw new IllegalStateException( "PROGRAMMER ERROR" );
-    this.algorithm = player.algo;
-    this.runDepth = algorithm.option( player.param );
+  public NegaMaxRobot( Algorithm a, int param ) {
+    this.algorithm = a;
+    this.runDepth = algorithm.option( param );
   }
 
   @Override

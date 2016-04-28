@@ -33,8 +33,10 @@ public class UCT_Robot implements Robot {
     for( int i = 0; i < policy.iterations; ++i ) {
       randomPlayerBoard.setBoard(board.clone());
       root.buildTree( randomPlayerBoard );
-
+      if(0 == i%10000)
+        System.err.println("UCT: " + i + "/" + policy.iterations);
     }
+    
     if( policy.useUCBPrior ) {
       System.out.println( "UCT Tree" );
       root.dump( 2, 2, policy.iterations, "" );

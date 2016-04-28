@@ -38,7 +38,7 @@ public class Handicap {
   public Set<Integer> getHandicapStones( int n ) {
     Set<Integer> result = new HashSet<>();
     if( n < 2 || n > 9 )
-      return null;
+      return result;
     if( n > 1 && 10 > n ) {
 
       int line1 = handiLine_1;

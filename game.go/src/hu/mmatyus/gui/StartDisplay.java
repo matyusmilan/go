@@ -16,27 +16,29 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class StartDisplay extends Frame {
+  public static enum Decision {
+    EXIT,
+    QUICK_GAME,
+    SETTINGS
+  }
+
+  public Decision            result;
+
   private static final long  serialVersionUID = 1L;
   public static final int    WIDTH            = 1600;
   public static final int    HEIGHT           = 900;
   public static final String TITLE            = "g(\u03C9) – GOmega";
   public static final String GO_RULES_URL     = "http://www.britgo.org/intro/intro2.html";
-  private Client             client;
+  private final Object       parent;
   private StartCanvas        canvas           = new StartCanvas();
-  private static final int   BTN_X_POS         = 210;
-  private static final int   BTN_Y_POS         = 550;
-  private static final int   BTN_PADDING   = 70;
-  private static final int   BTN_WIDTH     = 200;
-  private static final int   BTN_HEIGHT     = 40;
+  private static final int   BTN_X_POS        = 210;
+  private static final int   BTN_Y_POS        = 550;
+  private static final int   BTN_PADDING      = 70;
+  private static final int   BTN_WIDTH        = 200;
+  private static final int   BTN_HEIGHT       = 40;
 
-  public interface Client {
-    void onSuccess();
-
-    void onFailure( Exception e );
-  }
-
-  public StartDisplay( Client c ) throws IOException, FontFormatException {
-    this.client = c;
+  public StartDisplay( Object parent ) throws IOException, FontFormatException {
+    this.parent = parent;
 
     setSize( WIDTH, HEIGHT );
     setTitle( TITLE );
@@ -48,8 +50,15 @@ public class StartDisplay extends Frame {
     addWindowListener( new WindowAdapter() {
       @Override
       public void windowClosing( WindowEvent we ) {
-        client.onSuccess();
-        System.exit( 0 );
+        result = Decision.EXIT;
+        dispose();
+      }
+      @Override
+      public void windowClosed( WindowEvent we ) {
+        Object p = StartDisplay.this.parent;
+        synchronized( p ) {
+          p.notifyAll();
+        }
       }
     } );
   }
@@ -74,16 +83,18 @@ public class StartDisplay extends Frame {
           if( BTN_X_POS <= e.getPoint().x && e.getPoint().x <= BTN_X_POS + BTN_WIDTH && BTN_Y_POS + paddingMultiplier * BTN_PADDING <= e.getPoint().y && e.getPoint().y <= BTN_Y_POS + paddingMultiplier * BTN_PADDING + BTN_HEIGHT ) {
             switch( sb ) {
               case NEW_GAME:
-                System.out.println( "NEW_GAME" );
-                break;
+                System.out.println( "StartDisplay: NEW_GAME" );
+                result = Decision.QUICK_GAME;
+                dispose();
+                return;
               case SETTINGS:
-                System.out.println( "SETTINGS" );
-                break;
+                System.out.println( "StartDisplay: SETTINGS" );
+                result = Decision.SETTINGS;
+                dispose();
+                return;
               case RULES_OF_GO:
-                System.out.println( "RULES_OF_GO" );
+                System.out.println( "StartDisplay: RULES_OF_GO" );
                 openPageInDefaultBrowser( GO_RULES_URL );
-                break;
-              default:
                 break;
             }
           }

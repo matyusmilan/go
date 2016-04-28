@@ -1,12 +1,12 @@
 package hu.mmatyus.model;
 
-public class BoardEval {
+public class BoardEvaluator {
   private Board             board;
   private RandomPlayerBoard rnd;
   private double[]          area; // 0-white, 1-black, 0.5-neutral
   private double            score;
 
-  public BoardEval( Board board, PlayerPolicy policy ) {
+  public BoardEvaluator( Board board, PlayerPolicy policy ) {
     this.board = board;
     area = new double[board.getNumberOfCells()];
     rnd = new RandomPlayerBoard( board.boardType, policy );
@@ -22,9 +22,15 @@ public class BoardEval {
   public void eval( int iterations, double threshold ) {
     int i, j;
 
+    int REPORT_SIZE = iterations / 10;
+    if( REPORT_SIZE == 0 )
+      REPORT_SIZE = 1;
+
     for( j = 0; j < area.length; ++j )
       area[j] = 0;
     for( i = 0; i < iterations; ++i ) {
+      if(0 == i % REPORT_SIZE)
+        System.err.println("BoardEvaluator: " + i + "/" + iterations);
       rnd.board = board.clone();
       rnd.board.clearPasses();
       rnd.playRandomGame();
@@ -44,8 +50,8 @@ public class BoardEval {
       }
     }
   }
-  public double getArea(int pos)
-  {
+
+  public double getArea( int pos ) {
     return area[pos];
   }
 
