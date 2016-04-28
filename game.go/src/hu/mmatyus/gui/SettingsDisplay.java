@@ -304,7 +304,9 @@ public class SettingsDisplay extends Frame {
           g2d.setFont( font1 );
           padding = 500;
           for( BoardType bt : BoardType.values() ) {
-            g0.drawImage( ( bt == gameConfig.getBoardType() ) ? btnSetBoardType.get( "btnBoard" + bt.name() + "on" ) : btnSetBoardType.get( "btnBoard" + bt.name() + "off" ), 130 + padding * i++, 220, null );
+            g0.drawImage( ( bt == gameConfig.getBoardType() ) ? btnSetBoardType.get( "btnBoard" + bt.name() + "on" ) : btnSetBoardType.get( "btnBoard" + bt.name() + "off" ), 130 + padding * i, 220, null );
+            g2d.drawString( bt.name()+" ("+bt.label+")", 220 + padding * i, 610 );
+            i++;
           }
           break;
         case 1:
