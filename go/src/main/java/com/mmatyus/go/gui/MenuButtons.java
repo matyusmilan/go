@@ -6,9 +6,10 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public enum MenuButtons {
-  NEW_GAME( "/buttons/btnNewGame.png" ),
+  QUICK_GAME( "/buttons/btnQuickGame.png" ),
   SETTINGS( "/buttons/btnSettings.png" ),
-  RULES_OF_GO( "/buttons/btnRulesOfGo.png" );
+  RULES_OF_GO( "/buttons/btnRulesOfGo.png" ),
+  EXIT( "/buttons/btnExit.png" );
 
   MenuButtons( String sourceImage ) {
     this.imagePath = sourceImage;

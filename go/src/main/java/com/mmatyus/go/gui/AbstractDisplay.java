@@ -12,10 +12,10 @@ public abstract class AbstractDisplay extends Frame {
 
   public static final int WIDTH  = 1600;
   public static final int HEIGHT = 900;
-  protected final Object  parent;
+  private final Object    waiter;
 
-  public AbstractDisplay( final Object parent, final String title ) throws IOException {
-    this.parent = parent;
+  public AbstractDisplay( final Object waiter, final String title ) throws IOException {
+    this.waiter = waiter;
     setTitle( title );
     setSize( WIDTH, HEIGHT );
     setResizable( false );
@@ -30,9 +30,6 @@ public abstract class AbstractDisplay extends Frame {
 
       @Override
       public void windowClosed( WindowEvent we ) {
-        synchronized( parent ) {
-          parent.notifyAll();
-        }
         closed();
       }
     } );
@@ -42,4 +39,11 @@ public abstract class AbstractDisplay extends Frame {
 
   protected abstract void closed();
 
+  public abstract Menu getNextScreen();
+
+  final protected void notifyWaiter() {
+    synchronized( waiter ) {
+      waiter.notifyAll();
+    }
+  }
 }

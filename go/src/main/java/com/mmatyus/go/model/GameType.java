@@ -2,9 +2,8 @@ package com.mmatyus.go.model;
 
 public enum GameType {
   HVH( "Human -VS- Human" ),
-  HVC( "Human -VS- Computer" ),
-  CVH( "Computer -VS- Human" ),
-  CVC( "Computer -VS- Computer" );
+  HVC( "Human -VS- Robot" ),
+  CVH( "Robot -VS- Human" );
 
   public final String label;
 

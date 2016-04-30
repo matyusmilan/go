@@ -8,9 +8,14 @@ import com.mmatyus.go.model.Robot;
 public class UCT_Robot implements Robot {
   protected PlayerPolicy      policy;
   protected UCB_Pair<Integer> ucb_pair;
+  protected Board             board;
 
   public UCT_Robot( PlayerPolicy policy ) {
     this.policy = policy;
+  }
+
+  public void setBoard( Board board ) {
+    this.board = board;
   }
 
   @Override
@@ -36,6 +41,9 @@ public class UCT_Robot implements Robot {
       root.buildTree( randomPlayerBoard );
       if( 0 == i % 10000 )
         System.err.println( "UCT: " + i + "/" + policy.iterations );
+      if( Thread.interrupted() ) {
+        break;
+      }
     }
 
     if( policy.useUCBPrior ) {
@@ -53,5 +61,10 @@ public class UCT_Robot implements Robot {
       System.out.println( "Best action: " + ba );
       return ba;
     }
+  }
+
+  @Override
+  public Integer call() throws Exception {
+    return move( board );
   }
 }

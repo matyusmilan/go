@@ -31,15 +31,14 @@ public class SettingsDisplay extends AbstractDisplay {
   private static final String TITLE            = "g(\u03C9) – GOmega / Settings";
   private MyCanvas            canvas           = new MyCanvas();
   private int                 wizardPage       = 0;
-  public GameConfig           result           = null;
-  private GameConfig          gameConfig       = new GameConfig();
+  public Menu                 result           = null;
+  private final GameConfig    gameConfig;
 
-  public SettingsDisplay( Object parent ) throws IOException, FontFormatException {
-    super( parent, TITLE );
-
+  public SettingsDisplay( final Object waiter, final GameConfig actual ) throws IOException, FontFormatException {
+    super( waiter, TITLE );
+    this.gameConfig = actual;
     setupCanvas();
     add( canvas );
-
   }
 
   void setupCanvas() {
@@ -49,33 +48,45 @@ public class SettingsDisplay extends AbstractDisplay {
         //b.drawImage( btnNext, 1400, 830, null )
         if( wizardPage < 3 ) {
           //b.drawImage( btnNext, 1400, 830, null );
-          if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 830 <= e.getPoint().y && e.getPoint().y <= 860 ) {
+          if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
             if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH ) {
               System.out.println( "START" );
               setVisible( false );
-              result = gameConfig;
+              result = Menu.GAME;
               dispose();
               return;
             }
             System.out.println( "NEXT" );
+            if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 0 ) {
+              wizardPage++;
+            }
             wizardPage++;
           }
         } else {
           //b.drawImage( btnStart, 1400, 830, null );
-          if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 830 <= e.getPoint().y && e.getPoint().y <= 860 ) {
+          if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
             System.out.println( "START" );
             setVisible( false );
-            result = gameConfig;
+            result = Menu.GAME;
             dispose();
             return;
           }
         }
-        if( 0 < wizardPage ) {
-          //b.drawImage( btnBack, 50, 830, null );
-          if( 50 <= e.getPoint().x && e.getPoint().x <= 200 && 830 <= e.getPoint().y && e.getPoint().y <= 860 ) {
-            System.out.println( "BACK" );
+
+        //b.drawImage( btnBack, 50, 830, null );
+        if( 50 <= e.getPoint().x && e.getPoint().x <= 200 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
+          System.out.println( "BACK" );
+          if( 0 < wizardPage ) {
+            if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 2 ) {
+              wizardPage--;
+            }
             wizardPage--;
+          } else {
+            result = Menu.START;
+            dispose();
+            return;
           }
+
         }
 
         int padding = 50;
@@ -87,17 +98,25 @@ public class SettingsDisplay extends AbstractDisplay {
             for( BoardType bt : BoardType.values() ) {
               if( bt != gameConfig.getBoardType() ) {
                 if( 130 + padding * i <= e.getPoint().x && e.getPoint().x <= 130 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
+                  System.out.println( bt.name() );
                   gameConfig.setBoardType( bt );
                 }
               }
               i++;
             }
+            if( gameConfig.getBoardType() != BoardType.SMALL ) {
+              gameConfig.setGameType( GameType.HVH );
+              Player defaultHuman = new Player( PlayerType.HUMAN );
+              players[Board.BLACK] = defaultHuman;
+              players[Board.WHITE] = defaultHuman;
+              gameConfig.setPlayers( players );
+            }
             break;
           case 1:
-            padding = 380;
+            padding = 500;
             for( GameType gt : GameType.values() ) {
               if( gt != gameConfig.getGameType() ) {
-                if( 50 + padding * i <= e.getPoint().x && e.getPoint().x <= 50 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
+                if( 130 + padding * i <= e.getPoint().x && e.getPoint().x <= 130 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
                   gameConfig.setGameType( gt );
                 }
               }
@@ -106,10 +125,6 @@ public class SettingsDisplay extends AbstractDisplay {
             Player defaultComputer = new Player( PlayerType.COMPUTER, Algorithm.UCT, 1 );
             Player defaultHuman = new Player( PlayerType.HUMAN );
             switch( gameConfig.getGameType() ) {
-              case CVC:
-                players[Board.BLACK] = defaultComputer;
-                players[Board.WHITE] = defaultComputer;
-                break;
               case CVH:
                 players[Board.BLACK] = defaultComputer;
                 players[Board.WHITE] = defaultHuman;
@@ -124,8 +139,6 @@ public class SettingsDisplay extends AbstractDisplay {
                 break;
             }
             gameConfig.setPlayers( players );
-            //System.out.println( gameConfig.getGameType().name() );
-            //System.out.println( gameConfig.getPlayers()[Board.BLACK].playerType + " -vs- " + gameConfig.getPlayers()[Board.WHITE].playerType );
             break;
           case 2:
             padding = 60;
@@ -203,11 +216,11 @@ public class SettingsDisplay extends AbstractDisplay {
     final Image              background      = ImageIO.read( getClass().getResourceAsStream( "/goBackground3.png" ) );
     final Map<String, Image> btnSetBoardType = new HashMap<String, Image>();
     final Map<String, Image> btnSetGameType  = new HashMap<String, Image>();
-    final Image              btnStart        = ImageIO.read( getClass().getResourceAsStream( "/btnStart.png" ) );
+    final Image              btnStart        = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnStart.png" ) );
     final Image              btnBack         = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBack.png" ) );
     final Image              btnNext         = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnNext.png" ) );
-    final Image              btnRadioOff     = ImageIO.read( getClass().getResourceAsStream( "/btnRadioOff.png" ) );
-    final Image              btnRadioOn      = ImageIO.read( getClass().getResourceAsStream( "/btnRadioOn.png" ) );
+    final Image              btnRadioOff     = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOff.png" ) );
+    final Image              btnRadioOn      = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOn.png" ) );
     final Image              player01Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/w0.png" ) );
     final Image              player02Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
     final Font               font0           = Font.createFont( Font.TRUETYPE_FONT, getClass().getResourceAsStream( "/Kingthings_Petrock.ttf" ) );
@@ -270,15 +283,15 @@ public class SettingsDisplay extends AbstractDisplay {
       g2d.setFont( font1 );
       if( wizardPage < 3 ) {
         if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH )
-          g0.drawImage( btnStart, 1400, 830, null );
+          g0.drawImage( btnStart, 1400, 800, null );
         else
-          g0.drawImage( btnNext, 1400, 830, null );
+          g0.drawImage( btnNext, 1400, 800, null );
       } else {
-        g0.drawImage( btnStart, 1400, 830, null );
+        g0.drawImage( btnStart, 1400, 800, null );
       }
-      if( 0 < wizardPage ) {
-        g0.drawImage( btnBack, 50, 830, null );
-      }
+
+      g0.drawImage( btnBack, 50, 800, null );
+
       g2d.drawString( "Settings: ", 50, 50 );
       font1 = font0.deriveFont( 40F );
       g2d.setFont( font1 );
@@ -304,12 +317,14 @@ public class SettingsDisplay extends AbstractDisplay {
           drawSetting( g2d, 0, "1.) Board size:\t\t\t\t\t\t" + bt.name() + " (" + bt.label + ")" );
           drawSetting( g2d, 1, "2.) Game type:" );
           i = 0;
-          final int GAMETYPE_COL_WIDTH = 380;
+          final int GAMETYPE_COL_WIDTH = 500;
           font1 = font0.deriveFont( 32F );
           g2d.setFont( font1 );
           for( GameType gt : GameType.values() ) {
             final String onOff = ( gt == gameConfig.getGameType() ? "on" : "off" );
-            g0.drawImage( btnSetGameType.get( "btnGameType" + gt.name() + onOff ), 50 + GAMETYPE_COL_WIDTH * i++, 220, null );
+            g0.drawImage( btnSetGameType.get( "btnGameType" + gt.name() + onOff ), 130 + GAMETYPE_COL_WIDTH * i, 220, null );
+            g2d.drawString( gt.label, 180 + GAMETYPE_COL_WIDTH * i, 610 );
+            i++;
           }
           break;
         }
@@ -392,13 +407,17 @@ public class SettingsDisplay extends AbstractDisplay {
 
   @Override
   protected void closing() {
-    result = null;
+    result = Menu.START;
   }
 
   @Override
   protected void closed() {
-    // TODO Auto-generated method stub
+    notifyWaiter();
+  }
 
+  @Override
+  public Menu getNextScreen() {
+    return result;
   }
 
 }

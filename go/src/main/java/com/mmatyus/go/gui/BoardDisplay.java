@@ -13,14 +13,19 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 
 import com.mmatyus.go.algorithms.NegaMaxRobot;
 import com.mmatyus.go.algorithms.uct.UCT_Robot;
@@ -36,12 +41,15 @@ import com.mmatyus.go.model.Robot;
 
 @SuppressWarnings( "serial" )
 public class BoardDisplay extends AbstractDisplay {
-  public static final int     CHANGE_POS     = 80;
-  private static final String TITLE          = "g(\u03C9) – GOmega / On Board";
+  public static final int     CHANGE_POS                     = 80;
+  private static final String TITLE                          = "g(\u03C9) – GOmega / On Board";
+  private static final int    AMOUNT_OF_DIFERENT_WHITE_STONE = 16;
 
   public char[]               letters;
-  public int[]                currentWhiteType;                                // There are 16 different white stone graphics
-  BoardEvaluator              evaluator      = null;
+  public int[]                currentWhiteType;                                                                 // There are 16 different white stone graphics
+  public Image[]              whiteStones                    = new Image[AMOUNT_OF_DIFERENT_WHITE_STONE];
+  public Image                blackStone;
+  BoardEvaluator              evaluator                      = null;
   DispCanvas                  canvas;
   Dimension                   dim;
   int                         cell_size;
@@ -51,10 +59,12 @@ public class BoardDisplay extends AbstractDisplay {
   Board                       board;
   GameConfig                  gameConfig;
   boolean                     gameInProgress;
-  public int                  settingsWindow = 0;
+  public int                  settingsWindow                 = 0;
+  ExecutorService             executor                       = Executors.newSingleThreadExecutor();
+  private static final Logger LOGGER                         = Logger.getLogger( BoardDisplay.class.getName() );
 
-  public BoardDisplay( final Object parent, final Board board, final GameConfig gameConfig ) throws IOException, FontFormatException {
-    super( parent, TITLE );
+  public BoardDisplay( final Object waiter, final Board board, final GameConfig gameConfig ) throws IOException, FontFormatException {
+    super( waiter, TITLE );
     gameInProgress = false;
     // Initializing 'letters' with first sideLength alphabet's element
     letters = new char[board.boardType.sideLength];
@@ -66,7 +76,10 @@ public class BoardDisplay extends AbstractDisplay {
     for( int i = 0; i < currentWhiteType.length; ++i ) {
       currentWhiteType[i] = 0;
     }
-
+    for( int i = 0; i < AMOUNT_OF_DIFERENT_WHITE_STONE; i++ ) {
+      whiteStones[i] = ImageIO.read( getClass().getResourceAsStream( "/stones/w" + i + ".png" ) );
+    }
+    blackStone = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
     canvas = new DispCanvas();
 
     canvas.addMouseListener( new MouseAdapter() {
@@ -87,10 +100,8 @@ public class BoardDisplay extends AbstractDisplay {
             for( int color = 0; color < 2; color++ ) {
               if( board.getNextPlayer() == color ) {
                 if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 520 - color * padding <= e.getPoint().y && e.getPoint().y <= 620 - color * padding ) {
-                  System.out.println( ( color == 0 ) ? "WHITE" : "BLACK" + " clicked the PASS button!" );
                   placeStone( Board.PASS_MOVE );
                 } else if( 1330 <= e.getPoint().x && e.getPoint().x <= 1380 && 620 - color * padding <= e.getPoint().y && e.getPoint().y <= 720 - color * padding ) {
-                  System.out.println( ( color == 0 ) ? "WHITE" : "BLACK" + " clicked the RESIGN button!" );
                   placeStone( Board.RESIGN_MOVE );
                 }
               }
@@ -131,7 +142,18 @@ public class BoardDisplay extends AbstractDisplay {
     } else {
       r = new NegaMaxRobot( p.algo, p.param );
     }
-    final int robotIdea = r.move( board );
+    r.setBoard( board );
+    //final int robotIdea = r.move( board );
+    int robotIdea = Board.PASS_MOVE;
+
+    Future<Integer> future = executor.submit( r );
+    try {
+      robotIdea = future.get();
+    }
+    catch( InterruptedException | ExecutionException e ) {
+      JOptionPane.showMessageDialog( null, e, TITLE, JOptionPane.ERROR_MESSAGE );
+    }
+
     board.move( robotIdea );
   }
 
@@ -154,12 +176,12 @@ public class BoardDisplay extends AbstractDisplay {
       return false;
     board.move( pos );
     update();
-    if( board.isGameOver() )
+    if( board.isGameOver() && board.getLastMove() != Board.RESIGN_MOVE )
       finishGame();
     if( !nextIsHuman() ) {
       robotMove();
       update();
-      if( board.isGameOver() )
+      if( board.isGameOver() && board.getLastMove() != Board.RESIGN_MOVE )
         finishGame();
     }
     return true;
@@ -189,8 +211,8 @@ public class BoardDisplay extends AbstractDisplay {
       try {
         this.activeImg = ImageIO.read( getClass().getResourceAsStream( actImgPath ) );
         this.passiveImg = ImageIO.read( getClass().getResourceAsStream( pasImgPath ) );
-        this.switchButton.put( "on", ImageIO.read( getClass().getResourceAsStream( "/SwitchOn.png" ) ) );
-        this.switchButton.put( "off", ImageIO.read( getClass().getResourceAsStream( "/SwitchOff.png" ) ) );
+        this.switchButton.put( "on", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnSwitchOn.png" ) ) );
+        this.switchButton.put( "off", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnSwitchOff.png" ) ) );
         this.passLabel.put( "on", "Passed" );
         this.passLabel.put( "off", "Pass" );
         this.resignLabel.put( "on", "Resigned" );
@@ -218,21 +240,19 @@ public class BoardDisplay extends AbstractDisplay {
 
     public DispCanvas() throws IOException, FontFormatException {}
 
-    final Image  background       = ImageIO.read( getClass().getResourceAsStream( "/goBackground3.png" ) );
-    final Image  player01Disk     = ImageIO.read( getClass().getResourceAsStream( "/stones/w0.png" ) );
-    final Image  player02Disk     = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
-    final Image  statusMessage    = ImageIO.read( getClass().getResourceAsStream( "/StatusMessage.png" ) );
-    final Image  switchButtonOff  = ImageIO.read( getClass().getResourceAsStream( "/SwitchOff.png" ) );
-    final Image  activePassButton = ImageIO.read( getClass().getResourceAsStream( "/SwitchOn.png" ) );
+    final Image  background      = ImageIO.read( getClass().getResourceAsStream( "/goBackground3.png" ) );
+    final Image  player01Disk    = whiteStones[0];
+    final Image  player02Disk    = blackStone;
+    final Image  statusMessage   = ImageIO.read( getClass().getResourceAsStream( "/StatusMessage.png" ) );
 
-    final Image  btnRules         = ImageIO.read( getClass().getResourceAsStream( "/btnRulesOfGo.png" ) );
-    final Image  btnNewGame       = ImageIO.read( getClass().getResourceAsStream( "/btnNewGame.png" ) );
+    final Image  btnRules        = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRulesOfGo.png" ) );
+    final Image  btnNewGame      = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnNewGame.png" ) );
 
-    final Font   font0            = Font.createFont( Font.TRUETYPE_FONT, getClass().getResourceAsStream( "/Kingthings_Petrock.ttf" ) );
-    final Color  brownColor       = new Color( 67, 20, 16 );
-    final Color  whiteColor       = Color.WHITE;
-    final Color  blackColor       = Color.BLACK;
-    final Random randomGenerator  = new Random();
+    final Font   font0           = Font.createFont( Font.TRUETYPE_FONT, getClass().getResourceAsStream( "/Kingthings_Petrock.ttf" ) );
+    final Color  brownColor      = new Color( 67, 20, 16 );
+    final Color  whiteColor      = Color.WHITE;
+    final Color  blackColor      = Color.BLACK;
+    final Random randomGenerator = new Random();
 
     @Override
     public void paint( Graphics g ) {
@@ -246,7 +266,6 @@ public class BoardDisplay extends AbstractDisplay {
 
     public void re_display( Graphics g ) {
       dim = getSize();
-
       Image offscreen = createImage( dim.width, dim.height );
       Graphics g0 = offscreen.getGraphics();
       Graphics2D g2d = (Graphics2D)g0;
@@ -281,7 +300,7 @@ public class BoardDisplay extends AbstractDisplay {
           players[1 - nextPlayer].setPass( "on", g0, g2d, 1 - nextPlayer );
         }
         if( board.getLastMove() == Board.RESIGN_MOVE ) {
-          players[1 - nextPlayer].setResign( "on", g0, g2d, 1 - nextPlayer );
+          players[nextPlayer].setResign( "on", g0, g2d, nextPlayer );
         }
         g0.drawImage( players[nextPlayer].activeImg, 1100, ( ( nextPlayer == Board.BLACK ) ? 200 : 500 ), null );
         g0.drawImage( players[1 - board.getNextPlayer()].passiveImg, 1100, ( 1 - board.getNextPlayer() == Board.BLACK ) ? 200 : 500, null );
@@ -289,7 +308,6 @@ public class BoardDisplay extends AbstractDisplay {
         g2d.setColor( whiteColor );
         System.out.println( "NEXT: " + ( ( board.getNextPlayer() == Board.BLACK ) ? "BLACK" : "WHITE" ) );
         System.out.println( "NEXT: " + nextPlayer );
-        g2d.drawString( ( PlayerGraphic.COMPUTER == players[nextPlayer] ) ? "[GO]> " + nextPlayerColor + " is thinking..." : "[GO]> waiting for the " + nextPlayerColor + " player...", 960, 810 );
 
         if( board.isGameOver() ) {
           g0.drawImage( players[Board.BLACK].passiveImg, 1100, 200, null );
@@ -297,8 +315,10 @@ public class BoardDisplay extends AbstractDisplay {
           if( board.getLastMove() == Board.PASS_MOVE ) {
             //g2d.drawString( "[GO]> The winner is the " + ( eval.getScore() > 0 ? "BLACK" : "WHITE" ) + "!", 960, 810 );
           } else if( board.getLastMove() == Board.RESIGN_MOVE ) {
-            g2d.drawString( "[GO]> GAME OVER! The " + players[board.getNextPlayer()] + " resigned.", 960, 810 );
+            g2d.drawString( "[GO]> GAME OVER! The " + ( ( board.getNextPlayer() == Board.BLACK ) ? "BLACK resigned." : "WHITE resigned." ), 960, 810 );
           }
+        } else {
+          g2d.drawString( ( PlayerGraphic.COMPUTER == players[nextPlayer] ) ? "[GO]> " + nextPlayerColor + " is thinking..." : "[GO]> waiting for the " + nextPlayerColor + " player...", 960, 810 );
         }
 
         int n = board.sideLength;
@@ -324,7 +344,7 @@ public class BoardDisplay extends AbstractDisplay {
         Set<Integer> bigPoints = new Handicap( board.boardType ).getHandicapStones( board.boardType.startPoints );
         // draw stones
         g0.setFont( Font.decode( "Arial bold 12" ) );
-        BufferedImage currentDisk = null;
+        Image currentDisk = null;
         for( int x = 0; x < n; ++x ) {
           for( int y = 0; y < n; ++y ) {
             int x1 = d2 + x * cell_size;
@@ -349,9 +369,9 @@ public class BoardDisplay extends AbstractDisplay {
                   if( currentWhiteType[pos] == 0 ) {
                     currentWhiteType[pos] = randomGenerator.nextInt( 16 );
                   }
-                  currentDisk = ImageIO.read( getClass().getResourceAsStream( "/stones/w" + currentWhiteType[pos] + ".png" ) );
+                  currentDisk = whiteStones[currentWhiteType[pos]];
                 } else {
-                  currentDisk = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
+                  currentDisk = blackStone;
                 }
               }
               catch( Exception ex ) {
@@ -415,14 +435,18 @@ public class BoardDisplay extends AbstractDisplay {
 
   @Override
   protected void closing() {
-    // TODO Auto-generated method stub
-
+    LOGGER.info( "Closing!!!" );
+    executor.shutdownNow();
   }
 
   @Override
   protected void closed() {
-    // TODO Auto-generated method stub
+    notifyWaiter();
+  }
 
+  @Override
+  public Menu getNextScreen() {
+    return Menu.START;
   }
 
 }

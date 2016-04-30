@@ -13,14 +13,11 @@ public class NegaMaxRobot implements Robot {
   private final int          runDepth;
   private int                counting;
   private TranspositionTable table         = new TranspositionTable();
+  protected Board            board;
 
-  /*
-   * public NegaMaxRobot( int runDepth ) {
-   * if( runDepth > MAX_RUN_DEPTH )
-   * throw new IllegalStateException( "PROGRAMMER ERROR" );
-   * this.runDepth = runDepth;
-   * }
-   */
+  public void setBoard( Board board ) {
+    this.board = board;
+  }
 
   public NegaMaxRobot( Algorithm a, int param ) {
     this.algorithm = a;
@@ -237,4 +234,10 @@ public class NegaMaxRobot implements Robot {
     int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] ) + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - 20 * numOfPieces[2 + currentPlayer];
     return score;
   }
+
+  @Override
+  public Integer call() throws Exception {
+    return move( board );
+  }
+
 }

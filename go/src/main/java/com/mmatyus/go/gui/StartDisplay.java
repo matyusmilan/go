@@ -12,7 +12,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class StartDisplay extends AbstractDisplay {
-  public Menu                result;
+  private Menu               result;
 
   private static final long  serialVersionUID = 1L;
   public static final String TITLE            = "g(\u03C9) – GOmega";
@@ -24,8 +24,8 @@ public class StartDisplay extends AbstractDisplay {
   private static final int   BTN_WIDTH        = 200;
   private static final int   BTN_HEIGHT       = 40;
 
-  public StartDisplay( Object parent ) throws IOException, FontFormatException {
-    super( parent, TITLE );
+  public StartDisplay( final Object waiter ) throws IOException, FontFormatException {
+    super( waiter, TITLE );
 
     setupCanvas();
     add( canvas );
@@ -40,7 +40,7 @@ public class StartDisplay extends AbstractDisplay {
         for( MenuButtons sb : MenuButtons.values() ) {
           if( BTN_X_POS <= e.getPoint().x && e.getPoint().x <= BTN_X_POS + BTN_WIDTH && BTN_Y_POS + paddingMultiplier * BTN_PADDING <= e.getPoint().y && e.getPoint().y <= BTN_Y_POS + paddingMultiplier * BTN_PADDING + BTN_HEIGHT ) {
             switch( sb ) {
-              case NEW_GAME:
+              case QUICK_GAME:
                 System.out.println( "StartDisplay: NEW_GAME" );
                 result = Menu.QUICK_GAME;
                 dispose();
@@ -54,6 +54,11 @@ public class StartDisplay extends AbstractDisplay {
                 System.out.println( "StartDisplay: RULES_OF_GO" );
                 openPageInDefaultBrowser( GO_RULES_URL );
                 break;
+              case EXIT:
+                System.out.println( "StartDisplay: EXIT" );
+                result = Menu.EXIT;
+                dispose();
+                return;
             }
           }
           paddingMultiplier++;
@@ -115,7 +120,11 @@ public class StartDisplay extends AbstractDisplay {
 
   @Override
   protected void closed() {
-    // TODO Auto-generated method stub
+    notifyWaiter();
+  }
 
+  @Override
+  public Menu getNextScreen() {
+    return result;
   }
 }
