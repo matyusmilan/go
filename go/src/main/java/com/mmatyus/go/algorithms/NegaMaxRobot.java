@@ -1,5 +1,6 @@
 package com.mmatyus.go.algorithms;
 
+import com.mmatyus.go.ProgressContainer;
 import com.mmatyus.go.algorithms.transposition.TranspositionTable;
 import com.mmatyus.go.algorithms.transposition.TranspositionTableEntry;
 import com.mmatyus.go.algorithms.transposition.TranspositionType;
@@ -8,15 +9,20 @@ import com.mmatyus.go.model.Board;
 import com.mmatyus.go.model.Robot;
 
 public class NegaMaxRobot implements Robot {
-  public static final int    MAX_RUN_DEPTH = 7;
-  private final Algorithm    algorithm;
-  private final int          runDepth;
-  private int                counting;
-  private TranspositionTable table         = new TranspositionTable();
-  protected Board            board;
+  public static final int     MAX_RUN_DEPTH = 7;
+  private final Algorithm     algorithm;
+  private final int           runDepth;
+  private int                 counting;
+  private TranspositionTable  table         = new TranspositionTable();
+  protected Board             board;
+  protected ProgressContainer progressContainer;
 
   public void setBoard( Board board ) {
     this.board = board;
+  }
+
+  public void setProgressContainer( ProgressContainer progressContainer ) {
+    this.progressContainer = progressContainer;
   }
 
   public NegaMaxRobot( Algorithm a, int param ) {
@@ -25,9 +31,13 @@ public class NegaMaxRobot implements Robot {
   }
 
   @Override
-  public int move( Board board ) {
+  public int move( Board board, ProgressContainer pc ) {
     if( board.isGameOver() )
       throw new IllegalStateException( "PROGRAMMER ERROR" );
+
+    System.out.println( "Max steps: " + getMaxSteps( board.availableActions().size(), runDepth ) );
+    pc.reset();
+    pc.setSum( getMaxSteps( board.availableActions().size(), runDepth ) );
     int bestMove;
     if( board.getnumberOfEmptyCells() == board.getNumberOfCells() )
       return ( board.getNumberOfCells() - 1 ) / 2;
@@ -36,20 +46,17 @@ public class NegaMaxRobot implements Robot {
     int[] result = null;
     switch( algorithm ) {
       case NEGAMAX:
-        result = NegaMax( myBoard, runDepth, 1 );
+        result = NegaMax( pc, myBoard, runDepth, 1 );
         break;
       case NEGAMAX_AB:
-        result = Negamax_AB( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
+        result = Negamax_AB( pc, myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
         break;
       case NEGAMAX_AB_TT:
-        result = Negamax_AB_TT( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
+        result = Negamax_AB_TT( pc, myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
         break;
       default:
         throw new IllegalStateException( "PROGRAMMER ERROR" );
     }
-    //int[] result = negaMax( myBoard, runDepth, 1 );
-    //int[] result = alphaBetaPruning( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
-    //int[] result = alphaBetaPruningWithTranspositionTable( myBoard, runDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, 1 );
     bestMove = result[0];
     System.out.println( "Lépésszám: " + counting );
     if( result[1] < 0 )
@@ -58,15 +65,17 @@ public class NegaMaxRobot implements Robot {
     return bestMove;
   }
 
-  private int[] NegaMax( Board board, int depth, int sign ) {
+  private int[] NegaMax( ProgressContainer progressContainer, Board board, int depth, int sign ) {
     counting++;
+    if( counting % 50_000 == 0 )
+      progressContainer.setActual( counting );
+
     int[] result = new int[2];
     result[0] = Integer.MIN_VALUE;
     result[1] = Integer.MIN_VALUE;
     if( depth == 0 || board.isGameOver() ) {
       result[0] = board.getLastMove();
       result[1] = sign * evaluateStrategy_2( board );
-      //System.out.println(depth + "\tpos: "+result[0] + "\tscore: "+result[1] + "\tsteps: ");
       return result;
     }
     for( int pos : board.orderMoves() ) {
@@ -74,20 +83,20 @@ public class NegaMaxRobot implements Robot {
         continue;
       Board newBoard = board.clone();
       newBoard.move( pos );
-      int[] subResult = NegaMax( newBoard, depth - 1, -sign );
+      int[] subResult = NegaMax( progressContainer, newBoard, depth - 1, -sign );
       subResult[1] = -subResult[1];
       if( subResult[1] > result[1] ) {
         result[0] = pos;
         result[1] = subResult[1];
-        //System.out.println(depth + "\tpos: "+subResult[0] + "\tscore: "+subResult[1]);
       }
     }
-    //System.out.println(depth + "\tpos: "+result[0] + "\tscore: "+result[1]);
     return result;
   }
 
-  private int[] Negamax_AB( Board board, int depth, int alpha, int beta, int sign ) {
+  private int[] Negamax_AB( ProgressContainer progressContainer, Board board, int depth, int alpha, int beta, int sign ) {
     counting++;
+    if( counting % 50_000 == 0 )
+      progressContainer.setActual( counting );
     int[] result = new int[2];
     result[0] = Integer.MIN_VALUE;
     result[1] = Integer.MIN_VALUE;
@@ -101,7 +110,7 @@ public class NegaMaxRobot implements Robot {
         continue;
       Board newBoard = board.clone();
       newBoard.move( pos );
-      int[] subResult = Negamax_AB( newBoard, depth - 1, -beta, -alpha, -sign );
+      int[] subResult = Negamax_AB( progressContainer, newBoard, depth - 1, -beta, -alpha, -sign );
       subResult[1] = -subResult[1];
       if( subResult[1] > result[1] ) {
         result[0] = pos;
@@ -114,8 +123,10 @@ public class NegaMaxRobot implements Robot {
     return result;
   }
 
-  private int[] Negamax_AB_TT( Board board, int depth, int alpha, int beta, int sign ) {
+  private int[] Negamax_AB_TT( ProgressContainer progressContainer, Board board, int depth, int alpha, int beta, int sign ) {
     counting++;
+    if( counting % 50_000 == 0 )
+      progressContainer.setActual( counting );
     int[] result = new int[2];
     result[0] = Integer.MIN_VALUE;
     result[1] = Integer.MIN_VALUE;
@@ -154,7 +165,7 @@ public class NegaMaxRobot implements Robot {
         continue;
       Board newBoard = board.clone();
       newBoard.move( pos );
-      int[] subResult = Negamax_AB_TT( newBoard, depth - 1, -beta, -alpha, -sign );
+      int[] subResult = Negamax_AB_TT( progressContainer, newBoard, depth - 1, -beta, -alpha, -sign );
       subResult[1] = -subResult[1];
       if( subResult[1] > result[1] ) {
         result[0] = pos;
@@ -175,32 +186,6 @@ public class NegaMaxRobot implements Robot {
     return result;
   }
 
-  /*
-   * private int positionScore( int boardSize, int pos ) {
-   * final int cx = boardSize / 2;
-   * final int cy = boardSize / 2;
-   * int x = pos % boardSize;
-   * int y = pos / boardSize;
-   * int dx = Math.abs( x - cx );
-   * int dy = Math.abs( y - cy );
-   * return boardSize - 1 - dx - dy; // -> 0 .. boardSize - 1
-   * }
-   * private List<Integer> getNegighboursPos( int boardSize, int pos ) {
-   * List<Integer> result = new ArrayList<>();
-   * int x = pos % boardSize;
-   * int y = pos / boardSize;
-   * int p;
-   * for( int i = -1; i <= 1; i++ ) {
-   * for( int j = -1; j <= 1; j++ ) {
-   * p = y * boardSize + x;
-   * if( 0 <= p && p <= boardSize * boardSize && p != pos ) {
-   * result.add( p );
-   * }
-   * }
-   * }
-   * return result;
-   * }
-   */
   private int evaluateStrategy( Board board ) {
     int us = 1 - board.getNextPlayer();
     int score = 0;
@@ -230,14 +215,31 @@ public class NegaMaxRobot implements Robot {
     int[] liberties = board.getLifesForColor();
     int[] euler = board.getEulerNumber();
     int[] numOfPieces = board.getNumOfPieces();
-    //int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] ) + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - ( numOfPieces[2 + currentPlayer] - numOfPieces[2 + nextPlayer] );
     int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] ) + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - 20 * numOfPieces[2 + currentPlayer];
     return score;
   }
 
   @Override
   public Integer call() throws Exception {
-    return move( board );
+    return move( board, progressContainer );
+  }
+
+  private int getMaxSteps( int amountOfAvailableActions, int depth ) {
+    int result = 0;
+    int k = 0;
+    int subResult;
+    for( int i = depth; i > 0; i-- ) {
+      k = amountOfAvailableActions - i;
+      System.out.println( amountOfAvailableActions + " " + k );
+      if( k < 1 )
+        k = 1;
+      subResult = 1;
+      for( int j = amountOfAvailableActions; j > k; j-- ) {
+        subResult *= j;
+      }
+      result += subResult;
+    }
+    return result;
   }
 
 }

@@ -1,5 +1,6 @@
 package com.mmatyus.go.algorithms.uct;
 
+import com.mmatyus.go.ProgressContainer;
 import com.mmatyus.go.model.Board;
 import com.mmatyus.go.model.PlayerPolicy;
 import com.mmatyus.go.model.RandomPlayerBoard;
@@ -9,6 +10,7 @@ public class UCT_Robot implements Robot {
   protected PlayerPolicy      policy;
   protected UCB_Pair<Integer> ucb_pair;
   protected Board             board;
+  protected ProgressContainer progressContainer;
 
   public UCT_Robot( PlayerPolicy policy ) {
     this.policy = policy;
@@ -18,8 +20,14 @@ public class UCT_Robot implements Robot {
     this.board = board;
   }
 
+  public void setProgressContainer( ProgressContainer progressContainer ) {
+    this.progressContainer = progressContainer;
+  }
+
   @Override
-  public int move( Board board ) {
+  public int move( Board board, ProgressContainer pc ) throws InterruptedException {
+    pc.reset();
+    pc.setSum( policy.iterations );
 
     if( policy.useUCBPrior ) {
       if( ucb_pair == null ) {
@@ -36,13 +44,16 @@ public class UCT_Robot implements Robot {
     randomPlayerBoard.setBoard( board.clone() );
 
     UCT_Node<Integer> root = new UCT_Node<>( null, randomPlayerBoard, null, policy, ucb_pair );
+
     for( int i = 0; i < policy.iterations; ++i ) {
       randomPlayerBoard.setBoard( board.clone() );
       root.buildTree( randomPlayerBoard );
-      if( 0 == i % 10000 )
-        System.err.println( "UCT: " + i + "/" + policy.iterations );
+      if( 0 == i % 10000 ) {
+        pc.setActual( i );
+        //System.err.println( "UCT: " + pc.getCurrentProgress() );
+      }
       if( Thread.interrupted() ) {
-        break;
+        throw new InterruptedException();
       }
     }
 
@@ -65,6 +76,6 @@ public class UCT_Robot implements Robot {
 
   @Override
   public Integer call() throws Exception {
-    return move( board );
+    return move( board, progressContainer );
   }
 }

@@ -4,7 +4,7 @@
 
   <groupId>com.mmatyus</groupId>
   <artifactId>go</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>16.05</version>
   <packaging>jar</packaging>
 
   <name>go</name>
@@ -36,6 +36,18 @@
           <target>${project.java.version}</target>
         </configuration>
       </plugin>
+      <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-jar-plugin</artifactId>
+		<configuration>
+	      <archive>
+	        <manifest>
+	          <addClasspath>true</addClasspath>
+	          <mainClass>com.mmatyus.go.App</mainClass>
+	        </manifest>
+	      </archive>
+		</configuration>
+	  </plugin>
     </plugins>
   </build>
 </project>

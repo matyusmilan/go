@@ -45,37 +45,29 @@ public class SettingsDisplay extends AbstractDisplay {
     canvas.addMouseListener( new MouseAdapter() {
       @Override
       public void mouseClicked( MouseEvent e ) {
-        //b.drawImage( btnNext, 1400, 830, null )
         if( wizardPage < 3 ) {
-          //b.drawImage( btnNext, 1400, 830, null );
           if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
             if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH ) {
-              System.out.println( "START" );
               setVisible( false );
               result = Menu.GAME;
               dispose();
               return;
             }
-            System.out.println( "NEXT" );
             if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 0 ) {
               wizardPage++;
             }
             wizardPage++;
           }
         } else {
-          //b.drawImage( btnStart, 1400, 830, null );
           if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
-            System.out.println( "START" );
             setVisible( false );
             result = Menu.GAME;
             dispose();
             return;
           }
         }
-
-        //b.drawImage( btnBack, 50, 830, null );
         if( 50 <= e.getPoint().x && e.getPoint().x <= 200 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
-          System.out.println( "BACK" );
+
           if( 0 < wizardPage ) {
             if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 2 ) {
               wizardPage--;
@@ -86,9 +78,7 @@ public class SettingsDisplay extends AbstractDisplay {
             dispose();
             return;
           }
-
         }
-
         int padding = 50;
         int i = 0;
         Player[] players = new Player[2];
@@ -98,7 +88,6 @@ public class SettingsDisplay extends AbstractDisplay {
             for( BoardType bt : BoardType.values() ) {
               if( bt != gameConfig.getBoardType() ) {
                 if( 130 + padding * i <= e.getPoint().x && e.getPoint().x <= 130 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
-                  System.out.println( bt.name() );
                   gameConfig.setBoardType( bt );
                 }
               }
@@ -160,7 +149,6 @@ public class SettingsDisplay extends AbstractDisplay {
               if( players[Board.BLACK].playerType == PlayerType.COMPUTER ) {
                 if( alg != players[Board.BLACK].algo ) {
                   if( 100 <= e.getPoint().x && e.getPoint().x <= 100 + 300 && i * padding + 435 <= e.getPoint().y && e.getPoint().y <= i * padding + 435 + 30 ) {
-                    System.out.println( "BLACK " + alg );
                     players[Board.BLACK] = new Player( PlayerType.COMPUTER, alg, players[Board.BLACK].param );
                     gameConfig.setPlayers( players );
                   }
@@ -169,7 +157,6 @@ public class SettingsDisplay extends AbstractDisplay {
               if( players[Board.WHITE].playerType == PlayerType.COMPUTER ) {
                 if( alg != players[Board.WHITE].algo ) {
                   if( 700 <= e.getPoint().x && e.getPoint().x <= 700 + 300 && i * padding + 435 <= e.getPoint().y && e.getPoint().y <= i * padding + 435 + 30 ) {
-                    System.out.println( "WHITE " + alg );
                     players[Board.WHITE] = new Player( PlayerType.COMPUTER, alg, players[Board.WHITE].param );
                     gameConfig.setPlayers( players );
                   }
@@ -198,8 +185,6 @@ public class SettingsDisplay extends AbstractDisplay {
                 }
               }
             }
-            //System.out.println( gameConfig.getPlayers()[Board.BLACK].algo.name()+" "+ strength_label[gameConfig.getPlayers()[Board.BLACK].param]);
-            //System.out.println( gameConfig.getPlayers()[Board.WHITE].algo.name()+" "+ strength_label[gameConfig.getPlayers()[Board.WHITE].param]);
             break;
         }
         canvas.update( canvas.getGraphics() );
@@ -268,12 +253,10 @@ public class SettingsDisplay extends AbstractDisplay {
     }
 
     public void re_display( Graphics g ) {
-
       final Dimension dim = getSize();
       Image offscreen = createImage( dim.width, dim.height );
       Graphics g0 = offscreen.getGraphics();
       Graphics2D g2d = (Graphics2D)g0;
-      // currentGraphics = g0;
 
       g0.drawImage( background, 0, 0, null );
       Font font1;

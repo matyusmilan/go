@@ -5,7 +5,6 @@ import hu.mmatyus.algorithms.tt.TranspositionTableEntry;
 import hu.mmatyus.algorithms.tt.TranspositionTableEntry.Type;
 import hu.mmatyus.model.Algorithm;
 import hu.mmatyus.model.Board;
-import hu.mmatyus.model.Player;
 import hu.mmatyus.model.Robot;
 
 public class NegaMaxRobot implements Robot {

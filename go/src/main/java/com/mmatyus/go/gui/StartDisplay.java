@@ -41,21 +41,17 @@ public class StartDisplay extends AbstractDisplay {
           if( BTN_X_POS <= e.getPoint().x && e.getPoint().x <= BTN_X_POS + BTN_WIDTH && BTN_Y_POS + paddingMultiplier * BTN_PADDING <= e.getPoint().y && e.getPoint().y <= BTN_Y_POS + paddingMultiplier * BTN_PADDING + BTN_HEIGHT ) {
             switch( sb ) {
               case QUICK_GAME:
-                System.out.println( "StartDisplay: NEW_GAME" );
                 result = Menu.QUICK_GAME;
                 dispose();
                 return;
               case SETTINGS:
-                System.out.println( "StartDisplay: SETTINGS" );
                 result = Menu.SETTINGS;
                 dispose();
                 return;
               case RULES_OF_GO:
-                System.out.println( "StartDisplay: RULES_OF_GO" );
                 openPageInDefaultBrowser( GO_RULES_URL );
                 break;
               case EXIT:
-                System.out.println( "StartDisplay: EXIT" );
                 result = Menu.EXIT;
                 dispose();
                 return;

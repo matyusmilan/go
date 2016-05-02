@@ -22,11 +22,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
-import javax.swing.JOptionPane;
 
+import com.mmatyus.go.GoException;
+import com.mmatyus.go.ProgressChagedEvent;
+import com.mmatyus.go.ProgressChangedLisener;
+import com.mmatyus.go.ProgressContainer;
 import com.mmatyus.go.algorithms.NegaMaxRobot;
 import com.mmatyus.go.algorithms.uct.UCT_Robot;
 import com.mmatyus.go.model.Algorithm;
@@ -46,7 +48,7 @@ public class BoardDisplay extends AbstractDisplay {
   private static final int    AMOUNT_OF_DIFERENT_WHITE_STONE = 16;
 
   public char[]               letters;
-  public int[]                currentWhiteType;                                                                 // There are 16 different white stone graphics
+  public int[]                currentWhiteType;                                                          // There are 16 different white stone graphics
   public Image[]              whiteStones                    = new Image[AMOUNT_OF_DIFERENT_WHITE_STONE];
   public Image                blackStone;
   BoardEvaluator              evaluator                      = null;
@@ -61,11 +63,17 @@ public class BoardDisplay extends AbstractDisplay {
   boolean                     gameInProgress;
   public int                  settingsWindow                 = 0;
   ExecutorService             executor                       = Executors.newSingleThreadExecutor();
-  private static final Logger LOGGER                         = Logger.getLogger( BoardDisplay.class.getName() );
+  private ProgressContainer   progressContainer              = new ProgressContainer();
 
   public BoardDisplay( final Object waiter, final Board board, final GameConfig gameConfig ) throws IOException, FontFormatException {
     super( waiter, TITLE );
     gameInProgress = false;
+    progressContainer.addProgressChangedLisener( new ProgressChangedLisener() {
+      @Override
+      public void changed( ProgressChagedEvent e ) {
+        update();
+      }
+    } );
     // Initializing 'letters' with first sideLength alphabet's element
     letters = new char[board.boardType.sideLength];
     for( int li = 0; li < letters.length; li++ ) {
@@ -91,7 +99,6 @@ public class BoardDisplay extends AbstractDisplay {
               int x = ( e.getPoint().x - CHANGE_POS ) / cell_size;
               int y = ( e.getPoint().y - CHANGE_POS ) / cell_size;
               int side = board.sideLength;
-              System.out.println( x + " " + y );
               if( 0 <= x && x < side && 0 <= y && y < side )
                 click( x, y );
             }
@@ -117,9 +124,11 @@ public class BoardDisplay extends AbstractDisplay {
     this.gameConfig = gameConfig;
     setVisible( true );
 
+  }
+
+  public void firstMoveOfComputer() {
     if( !nextIsHuman() ) {
       robotMove();
-      update();
     }
   }
 
@@ -143,18 +152,18 @@ public class BoardDisplay extends AbstractDisplay {
       r = new NegaMaxRobot( p.algo, p.param );
     }
     r.setBoard( board );
-    //final int robotIdea = r.move( board );
+    r.setProgressContainer( progressContainer );
     int robotIdea = Board.PASS_MOVE;
 
     Future<Integer> future = executor.submit( r );
     try {
       robotIdea = future.get();
+      board.move( robotIdea );
+      update();
     }
     catch( InterruptedException | ExecutionException e ) {
-      JOptionPane.showMessageDialog( null, e, TITLE, JOptionPane.ERROR_MESSAGE );
+      throw new GoException( e );
     }
-
-    board.move( robotIdea );
   }
 
   void finishGame() {
@@ -306,8 +315,6 @@ public class BoardDisplay extends AbstractDisplay {
         g0.drawImage( players[1 - board.getNextPlayer()].passiveImg, 1100, ( 1 - board.getNextPlayer() == Board.BLACK ) ? 200 : 500, null );
 
         g2d.setColor( whiteColor );
-        System.out.println( "NEXT: " + ( ( board.getNextPlayer() == Board.BLACK ) ? "BLACK" : "WHITE" ) );
-        System.out.println( "NEXT: " + nextPlayer );
 
         if( board.isGameOver() ) {
           g0.drawImage( players[Board.BLACK].passiveImg, 1100, 200, null );
@@ -318,7 +325,7 @@ public class BoardDisplay extends AbstractDisplay {
             g2d.drawString( "[GO]> GAME OVER! The " + ( ( board.getNextPlayer() == Board.BLACK ) ? "BLACK resigned." : "WHITE resigned." ), 960, 810 );
           }
         } else {
-          g2d.drawString( ( PlayerGraphic.COMPUTER == players[nextPlayer] ) ? "[GO]> " + nextPlayerColor + " is thinking..." : "[GO]> waiting for the " + nextPlayerColor + " player...", 960, 810 );
+          g2d.drawString( ( PlayerGraphic.COMPUTER == players[nextPlayer] ) ? "[GO]> " + nextPlayerColor + " is thinking... " + progressContainer.getCurrentProgress() : "[GO]> waiting for the " + nextPlayerColor + " player...", 960, 810 );
         }
 
         int n = board.sideLength;
@@ -416,16 +423,6 @@ public class BoardDisplay extends AbstractDisplay {
               metrics = g2d.getFontMetrics( font1 );
               g2d.drawString( n - x + "", d2 - cell_size / 10 * 8 - ( metrics.stringWidth( n - x + "" ) / 2 ), d2 + x * cell_size + board.boardType.posLabelSize / 10 * 4 );
             }
-
-            // pos
-            //if (board.getLifeOfString(pos) != 0) {
-            //String posStr = board.getLifeOfString( pos ) + "";
-            //String posStr = pos + "";
-            //g0.setFont( Font.decode( "Arial bold 12" ) );
-            //Rectangle2D rect = g0.getFontMetrics().getStringBounds( posStr, g0 );
-            //g0.setColor( Color.BLUE );
-            //g0.drawString( posStr, 10 + (int) ( x1 - rect.getWidth() / 2 ), 10 + (int) ( y1 + rect.getHeight() / 2 ) );
-            //}
           }
         }
       }
@@ -435,7 +432,6 @@ public class BoardDisplay extends AbstractDisplay {
 
   @Override
   protected void closing() {
-    LOGGER.info( "Closing!!!" );
     executor.shutdownNow();
   }
 

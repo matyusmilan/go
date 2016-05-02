@@ -25,29 +25,35 @@ public class GameController {
     AbstractDisplay screen = null;
 
     while( true ) {
-      switch( activeScreen ) {
-        case START:
-          screen = runStartDisplay();
-          break;
-        case EXIT:
-          return;
-        case QUICK_GAME:
-          screen = runBoardDisplay( DEFAULT_GAME_CONFIG );
-          break;
-        case GAME:
-          screen = runBoardDisplay( ACTUAL );
-          break;
-        case SETTINGS:
-          screen = runSettingsDisplay();
-          break;
-        default:
-          throw new IllegalStateException( "Unhandled state!" );
+      try {
+        switch( activeScreen ) {
+          case START:
+            screen = runStartDisplay();
+            break;
+          case EXIT:
+            return;
+          case QUICK_GAME:
+            screen = runBoardDisplay( DEFAULT_GAME_CONFIG );
+            break;
+          case GAME:
+            screen = runBoardDisplay( ACTUAL );
+            break;
+          case SETTINGS:
+            screen = runSettingsDisplay();
+            break;
+          default:
+            throw new IllegalStateException( "Unhandled state!" );
+        }
+        synchronized( this ) {
+          this.wait();
+        }
+        activeScreen = screen.getNextScreen();
       }
-      synchronized( this ) {
-        this.wait();
+      catch( GoException e ) {
+        activeScreen = Menu.START;
       }
-      activeScreen = screen.getNextScreen();
     }
+
   }
 
   private AbstractDisplay runStartDisplay() throws IOException, FontFormatException, InterruptedException {
@@ -66,7 +72,7 @@ public class GameController {
     final Board board = new Board( gc.getBoardType(), gc.getHandicap(), KOMI );
     final BoardDisplay bd = new BoardDisplay( this, board, gc );
     bd.setVisible( true );
-    bd.update();
+    bd.firstMoveOfComputer();
     return bd;
   }
 
