@@ -192,8 +192,8 @@ public class Board {
     for( int i = 0; i < cellCount; ++i ) {
       if( 0 <= cells[i] ) {
         numOfPieces[cells[i]]++;
-        if( ( i % sideLength ) * ( i / sideLength ) % sideLength == 0 ) {
-          //if( i < sideLength || sideLength * sideLength - sideLength <= i || i % sideLength == 0 || i % sideLength == sideLength - 1 ) {
+        // (x%y)%(y-1) * (x/y)%(y-1) 
+        if( ( ( i % sideLength ) % ( sideLength - 1 ) ) * ( (int) ( i / sideLength ) % ( sideLength - 1 ) ) == 0 ) {
           numOfPieces[2 + cells[i]]++;
         }
       }
