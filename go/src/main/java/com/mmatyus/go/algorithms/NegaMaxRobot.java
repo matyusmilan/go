@@ -35,9 +35,9 @@ public class NegaMaxRobot implements Robot {
     if( board.isGameOver() )
       throw new IllegalStateException( "PROGRAMMER ERROR" );
 
-    System.out.println( "Max steps: " + getMaxSteps( board.availableActions().size(), runDepth ) );
+    System.out.println( "Max steps: " + getMaxSteps( board.availableActions().size() - 1, runDepth ) );
     pc.reset();
-    pc.setSum( getMaxSteps( board.availableActions().size(), runDepth ) );
+    pc.setSum( getMaxSteps( board.availableActions().size() - 1, runDepth ) );
     int bestMove;
     if( board.getnumberOfEmptyCells() == board.getNumberOfCells() )
       return ( board.getNumberOfCells() - 1 ) / 2;
