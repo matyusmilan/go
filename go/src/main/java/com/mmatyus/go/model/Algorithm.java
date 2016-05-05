@@ -1,10 +1,10 @@
 package com.mmatyus.go.model;
 
 public enum Algorithm {
-  UCT( "Monte-Carlo Tree Search + UCT", "Node count", new int[] { 100_000, 300_000, 500_000 } ),
-  NEGAMAX( "NegaMax", "Depth", new int[] { 3, 4, 5 } ),
-  NEGAMAX_AB( "NegaMax + AB", "Depth", new int[] { 3, 4, 5 } ),
-  NEGAMAX_AB_TT( "NegaMax + AB + TT", "Depth", new int[] { 3, 4, 5 } );
+  UCT( "Monte-Carlo Tree Search + UCT", "Node count", new int[] { 100_000, 200_000, 300_000 } ),
+  NEGAMAX( "NegaMax", "Depth", new int[] { 2, 3, 4 } ),
+  NEGAMAX_AB( "NegaMax + AB", "Depth", new int[] { 2, 3, 4 } ),
+  NEGAMAX_AB_TT( "NegaMax + AB + TT", "Depth", new int[] { 2, 3, 4 } );
 
   Algorithm( String label, String optionName, int[] options ) {
     this.label = label;

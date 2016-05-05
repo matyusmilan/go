@@ -58,8 +58,8 @@ public class UCT_Robot implements Robot {
     }
 
     if( policy.useUCBPrior ) {
-      System.out.println( "UCT Tree" );
-      root.dump( 2, 2, policy.iterations, "" );
+      //System.out.println( "UCT Tree" );
+      //root.dump( 2, 2, policy.iterations, "" );
     }
     if( root.getWinRate() < policy.passThreshold ) {
       System.out.println( "Best action: PASS" );

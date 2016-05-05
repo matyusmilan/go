@@ -52,6 +52,7 @@ public class BoardDisplay extends AbstractDisplay {
   public Image[]              whiteStones                    = new Image[AMOUNT_OF_DIFERENT_WHITE_STONE];
   public Image                blackStone;
   BoardEvaluator              evaluator                      = null;
+  boolean                     hasScore                       = false;
   DispCanvas                  canvas;
   Dimension                   dim;
   int                         cell_size;
@@ -117,6 +118,7 @@ public class BoardDisplay extends AbstractDisplay {
           }
         }
       }
+
     } );
 
     add( canvas );
@@ -168,9 +170,10 @@ public class BoardDisplay extends AbstractDisplay {
 
   void finishGame() {
     evaluator = new BoardEvaluator( board, new PlayerPolicy( 300_000 ) );
-    final int EVAL_STEPS = 10000;
+    final int EVAL_STEPS = 5000;
     final double EVAL_THRESHOLD = 0.4;
     evaluator.eval( EVAL_STEPS, EVAL_THRESHOLD );
+    hasScore = true;
     update();
   }
 
@@ -307,6 +310,9 @@ public class BoardDisplay extends AbstractDisplay {
 
         if( board.getLastMove() == Board.PASS_MOVE ) {
           players[1 - nextPlayer].setPass( "on", g0, g2d, 1 - nextPlayer );
+          if( board.getPassNum() == 2 ) {
+            players[nextPlayer].setPass( "on", g0, g2d, nextPlayer );
+          }
         }
         if( board.getLastMove() == Board.RESIGN_MOVE ) {
           players[nextPlayer].setResign( "on", g0, g2d, nextPlayer );
@@ -319,8 +325,16 @@ public class BoardDisplay extends AbstractDisplay {
         if( board.isGameOver() ) {
           g0.drawImage( players[Board.BLACK].passiveImg, 1100, 200, null );
           g0.drawImage( players[Board.WHITE].passiveImg, 1100, 500, null );
+          //g0.drawImage( MenuButtons.QUICK_GAME.getImage(), 930, 40, null );
+          //g0.drawImage( MenuButtons.EXIT.getImage(), 1380, 40, null );
           if( board.getLastMove() == Board.PASS_MOVE ) {
-            //g2d.drawString( "[GO]> The winner is the " + ( eval.getScore() > 0 ? "BLACK" : "WHITE" ) + "!", 960, 810 );
+            if( hasScore ) {
+              double[] score = evaluator.getScore();
+              g2d.drawString( "[GO]>Winner: " + ( score[Board.BLACK] - score[Board.WHITE] > 0 ? "BLACK" : "WHITE" ) + " Score: (" + score[Board.BLACK] + " - " + score[Board.WHITE] + ")", 960, 810 );
+            } else {
+              g2d.drawString( "Please wait, counting the scores...", 960, 810 );
+            }
+
           } else if( board.getLastMove() == Board.RESIGN_MOVE ) {
             g2d.drawString( "[GO]> GAME OVER! The " + ( ( board.getNextPlayer() == Board.BLACK ) ? "BLACK resigned." : "WHITE resigned." ), 960, 810 );
           }

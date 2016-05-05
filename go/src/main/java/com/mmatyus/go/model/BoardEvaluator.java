@@ -4,19 +4,21 @@ public class BoardEvaluator {
   private Board             board;
   private RandomPlayerBoard rnd;
   private double[]          area; // 0-white, 1-black, 0.5-neutral
-  private double            score;
+  private double[]          score;
 
   public BoardEvaluator( Board board, PlayerPolicy policy ) {
     this.board = board;
     area = new double[board.getNumberOfCells()];
     rnd = new RandomPlayerBoard( board.boardType, policy );
+    score = new double[2];
     reset();
   }
 
   public void reset() {
     for( int i = 0; i < area.length; ++i )
       area[i] = 0.5;
-    score = board.komi;
+    score[Board.BLACK] = 0.0;
+    score[Board.WHITE] = board.komi;
   }
 
   public void eval( int iterations, double threshold ) {
@@ -29,8 +31,8 @@ public class BoardEvaluator {
     for( j = 0; j < area.length; ++j )
       area[j] = 0;
     for( i = 0; i < iterations; ++i ) {
-      if( 0 == i % REPORT_SIZE )
-        System.err.println( "BoardEvaluator: " + i + "/" + iterations );
+      //if( 0 == i % REPORT_SIZE )
+      //System.err.println( "BoardEvaluator: " + i + "/" + iterations );
       rnd.board = board.clone();
       rnd.board.clearPasses();
       rnd.playRandomGame();
@@ -40,13 +42,12 @@ public class BoardEvaluator {
         area[j] += rnd.board.getArea( j );
     }
 
-    score = -board.getKomi();
     for( j = 0; j < area.length; ++j ) {
       area[j] /= iterations;
       if( area[j] < threshold ) {
-        score--;
+        score[Board.WHITE]++;
       } else if( area[j] > 1 - threshold ) {
-        score++;
+        score[Board.BLACK]++;
       }
     }
   }
@@ -55,7 +56,7 @@ public class BoardEvaluator {
     return area[pos];
   }
 
-  public double getScore() {
+  public double[] getScore() {
     return score;
   }
 
