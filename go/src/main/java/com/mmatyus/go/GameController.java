@@ -16,9 +16,9 @@ import com.mmatyus.go.model.PlayerType;
 
 public class GameController {
 
-  private final static GameConfig DEFAULT_GAME_CONFIG = getDefaultConfig();
-  private final static GameConfig ACTUAL              = new GameConfig();
+  private final static GameConfig DEFAULT_GAME_CONFIG = createDefaultConfig();
   private static final double     KOMI                = 6.5;
+  private final GameConfig        ACTUAL              = new GameConfig();
 
   public void startGame() throws IOException, FontFormatException, InterruptedException {
     Menu activeScreen = Menu.START;
@@ -39,7 +39,7 @@ public class GameController {
             screen = runBoardDisplay( ACTUAL );
             break;
           case SETTINGS:
-            screen = runSettingsDisplay();
+            screen = runSettingsDisplay( ACTUAL );
             break;
           default:
             throw new IllegalStateException( "Unhandled state!" );
@@ -62,8 +62,8 @@ public class GameController {
     return sd;
   }
 
-  private AbstractDisplay runSettingsDisplay() throws IOException, FontFormatException, InterruptedException {
-    final SettingsDisplay sd = new SettingsDisplay( this, ACTUAL );
+  private AbstractDisplay runSettingsDisplay( GameConfig gc ) throws IOException, FontFormatException, InterruptedException {
+    final SettingsDisplay sd = new SettingsDisplay( this, gc );
     sd.setVisible( true );
     return sd;
   }
@@ -76,7 +76,7 @@ public class GameController {
     return bd;
   }
 
-  private static GameConfig getDefaultConfig() {
+  private static GameConfig createDefaultConfig() {
     GameConfig result = new GameConfig();
     result.getPlayers()[1] = new Player( PlayerType.COMPUTER, Algorithm.UCT, 0 );
     return result;

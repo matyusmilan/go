@@ -330,7 +330,7 @@ public class BoardDisplay extends AbstractDisplay {
           if( board.getLastMove() == Board.PASS_MOVE ) {
             if( hasScore ) {
               double[] score = evaluator.getScore();
-              g2d.drawString( "[GO]>Winner: " + ( score[Board.BLACK] - score[Board.WHITE] > 0 ? "BLACK" : "WHITE" ) + " Score: (" + score[Board.BLACK] + " - " + score[Board.WHITE] + ")", 960, 810 );
+              g2d.drawString( "[GO]>Winner: " + ( score[Board.BLACK] - score[Board.WHITE] > 0 ? "BLACK" : "WHITE" ) + " Scores: (" + score[Board.BLACK] + " : " + score[Board.WHITE] + ")", 960, 810 );
             } else {
               g2d.drawString( "Please wait, counting the scores...", 960, 810 );
             }

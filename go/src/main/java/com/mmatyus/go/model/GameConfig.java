@@ -1,6 +1,5 @@
 package com.mmatyus.go.model;
 
-
 public class GameConfig {
   public static final BoardType DEFAULT_BOARD_TYPE = BoardType.SMALL;
   public static final GameType  DEFAULT_GAME_TYPE  = GameType.HVH;
@@ -19,6 +18,18 @@ public class GameConfig {
     this.players[Board.BLACK] = DEFAULT_BLACK;
     this.players[Board.WHITE] = DEFAULT_WHITE;
     this.handicap = DEFAULT_HANDICAP;
+  }
+
+  public GameConfig( GameConfig other ) {
+    this.gameType = other.gameType;
+    this.boardType = other.boardType;
+    for( int i = 0; i < 2; ++i )
+      this.players[i] = other.players[i];
+    this.handicap = other.handicap;
+  }
+
+  public GameConfig clone() {
+    return new GameConfig( this );
   }
 
   public BoardType getBoardType() {

@@ -1,9 +1,12 @@
 package com.mmatyus.go.model;
 
+/**
+ * Immutable player configuration.
+ */
 public class Player {
-  public final PlayerType      playerType;
-  public final Algorithm algo;
-  public final int       param;
+  public final PlayerType playerType;
+  public final Algorithm  algo;
+  public final int        param;
 
   public Player( PlayerType t, Algorithm a, int p ) {
     this.playerType = t;

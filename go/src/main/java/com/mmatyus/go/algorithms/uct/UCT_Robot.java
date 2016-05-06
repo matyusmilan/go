@@ -48,7 +48,7 @@ public class UCT_Robot implements Robot {
     for( int i = 0; i < policy.iterations; ++i ) {
       randomPlayerBoard.setBoard( board.clone() );
       root.buildTree( randomPlayerBoard );
-      if( 0 == i % 10000 ) {
+      if( 0 == i % 1000 ) {
         pc.setActual( i );
         //System.err.println( "UCT: " + pc.getCurrentProgress() );
       }
