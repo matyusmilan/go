@@ -202,7 +202,7 @@ public class SettingsDisplay extends AbstractDisplay {
     final Map<String, Image> btnSetBoardType = new HashMap<String, Image>();
     final Map<String, Image> btnSetGameType  = new HashMap<String, Image>();
     final Image              btnStart        = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnStart.png" ) );
-    final Button             btnBack         = new Button( "/buttons/btnBack.png", 50, 800 );
+    final Button             btnBack         = new Button( "BACK", "/buttons/btnBack.png", 50, 800 );
     // final Image           btnBack         = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBack.png" ) );
     final Image              btnNext         = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnNext.png" ) );
     final Image              btnRadioOff     = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOff.png" ) );

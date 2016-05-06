@@ -18,14 +18,15 @@ public class StartDisplay extends AbstractDisplay {
   public static final String TITLE            = "g(\u03C9) – GOmega";
   public static final String GO_RULES_URL     = "http://www.britgo.org/intro/intro2.html";
   private StartCanvas        canvas           = new StartCanvas();
-  private static final int   BTN_X_POS        = 210;
-  private static final int   BTN_Y_POS        = 550;
-  private static final int   BTN_PADDING      = 70;
-  private static final int   BTN_WIDTH        = 200;
-  private static final int   BTN_HEIGHT       = 40;
+  private final Button[]     buttonsOfPage    = new Button[4];
 
   public StartDisplay( final Object waiter ) throws IOException, FontFormatException {
     super( waiter, TITLE );
+
+    buttonsOfPage[0] = new Button( "QUICK_GAME", "/buttons/btnQuickGame.png", 210, 550 );
+    buttonsOfPage[1] = new Button( "SETTINGS", "/buttons/btnSettings.png", 210, 620 );
+    buttonsOfPage[2] = new Button( "RULES", "/buttons/btnRulesOfGo.png", 210, 690 );
+    buttonsOfPage[3] = new Button( "EXIT", "/buttons/btnExit.png", 210, 760 );
 
     setupCanvas();
     add( canvas );
@@ -36,28 +37,23 @@ public class StartDisplay extends AbstractDisplay {
     canvas.addMouseListener( new MouseAdapter() {
       @Override
       public void mouseClicked( MouseEvent e ) {
-        int paddingMultiplier = 0;
-        for( MenuButtons sb : MenuButtons.values() ) {
-          if( BTN_X_POS <= e.getPoint().x && e.getPoint().x <= BTN_X_POS + BTN_WIDTH && BTN_Y_POS + paddingMultiplier * BTN_PADDING <= e.getPoint().y && e.getPoint().y <= BTN_Y_POS + paddingMultiplier * BTN_PADDING + BTN_HEIGHT ) {
-            switch( sb ) {
-              case QUICK_GAME:
-                result = Menu.QUICK_GAME;
-                dispose();
-                return;
-              case SETTINGS:
-                result = Menu.SETTINGS;
-                dispose();
-                return;
-              case RULES_OF_GO:
-                openPageInDefaultBrowser( GO_RULES_URL );
-                break;
-              case EXIT:
-                result = Menu.EXIT;
-                dispose();
-                return;
-            }
-          }
-          paddingMultiplier++;
+        if( buttonsOfPage[0].hasPoint( e.getPoint() ) ) {
+          result = Menu.QUICK_GAME;
+          dispose();
+          return;
+        }
+        if( buttonsOfPage[1].hasPoint( e.getPoint() ) ) {
+          result = Menu.SETTINGS;
+          dispose();
+          return;
+        }
+        if( buttonsOfPage[2].hasPoint( e.getPoint() ) ) {
+          openPageInDefaultBrowser( GO_RULES_URL );
+        }
+        if( buttonsOfPage[3].hasPoint( e.getPoint() ) ) {
+          result = Menu.EXIT;
+          dispose();
+          return;
         }
         canvas.update( canvas.getGraphics() );
         super.mouseClicked( e );
@@ -67,10 +63,12 @@ public class StartDisplay extends AbstractDisplay {
 
   class StartCanvas extends Canvas {
     private static final long serialVersionUID  = 1L;
-    final Image               background        = ImageIO.read( getClass().getResourceAsStream( "/openScreen2.png" ) );
+    private final Image       background        = ImageIO.read( getClass().getResourceAsStream( "/openScreen2.png" ) );
     int                       paddingMultiplier = 0;
 
-    public StartCanvas() throws IOException, FontFormatException {}
+    public StartCanvas() throws IOException, FontFormatException {
+
+    }
 
     @Override
     public void paint( Graphics g ) {
@@ -82,6 +80,10 @@ public class StartDisplay extends AbstractDisplay {
       re_display( g );
     }
 
+    private void drawButton( Graphics g, Button b ) {
+      g.drawImage( b.image, b.x, b.y, null );
+    }
+
     public void re_display( Graphics g ) {
 
       final Dimension dim = getSize();
@@ -90,11 +92,8 @@ public class StartDisplay extends AbstractDisplay {
 
       g0.drawImage( background, 0, 0, null );
 
-      paddingMultiplier = 0;
-      for( MenuButtons actual : MenuButtons.values() ) {
-        g0.drawImage( actual.getImage(), BTN_X_POS, BTN_Y_POS + paddingMultiplier * BTN_PADDING, null );
-        paddingMultiplier++;
-      }
+      for( Button button : buttonsOfPage )
+        drawButton( g0, button );
 
       g.drawImage( offscreen, 0, 0, this );
     } // re_display

@@ -7,8 +7,15 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 class Button {
-  public Button( String path, int x, int y ) throws IOException {
-    this.image = ImageIO.read( getClass().getResourceAsStream( path ) );
+  public Button( String name, String path, int x, int y ) throws IOException {
+    this.name = name;
+    try {
+      this.image = ImageIO.read( getClass().getResourceAsStream( path ) );
+    }
+    catch( IOException e ) {
+      throw new IllegalArgumentException( String.format( "Given resource (%s) does not exist!", path ), e );
+    }
+    this.path = path;
     this.x = x;
     this.y = y;
     this.w = image.getWidth( null );
@@ -23,7 +30,9 @@ class Button {
     return hasPoint( p.x, p.y );
   }
 
-  public final Image image;
-  public final int   x, y;
-  public final int   w, h;
+  public final Image  image;
+  public final String path;
+  public final String name;
+  public final int    x, y;
+  public final int    w, h;
 }
