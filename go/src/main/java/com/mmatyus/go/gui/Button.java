@@ -6,20 +6,20 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-class Button {
-  public Button( String name, String path, int x, int y ) throws IOException {
-    this.name = name;
+public class Button {
+
+  Button( String path, int x, int y ) {
+    this.path = path;
     try {
-      this.image = ImageIO.read( getClass().getResourceAsStream( path ) );
+      this.images = ImageIO.read( getClass().getResourceAsStream( path ) );
     }
     catch( IOException e ) {
       throw new IllegalArgumentException( String.format( "Given resource (%s) does not exist!", path ), e );
     }
-    this.path = path;
     this.x = x;
     this.y = y;
-    this.w = image.getWidth( null );
-    this.h = image.getHeight( null );
+    this.w = images.getWidth( null );
+    this.h = images.getHeight( null );
   }
 
   boolean hasPoint( int px, int py ) {
@@ -30,9 +30,8 @@ class Button {
     return hasPoint( p.x, p.y );
   }
 
-  public final Image  image;
+  public final Image  images;
   public final String path;
-  public final String name;
   public final int    x, y;
   public final int    w, h;
 }

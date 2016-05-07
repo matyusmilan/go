@@ -1,7 +1,5 @@
 package com.mmatyus.go.gui;
 
-import java.awt.Canvas;
-import java.awt.Dimension;
 import java.awt.FontFormatException;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -23,10 +21,10 @@ public class StartDisplay extends AbstractDisplay {
   public StartDisplay( final Object waiter ) throws IOException, FontFormatException {
     super( waiter, TITLE );
 
-    buttonsOfPage[0] = new Button( "QUICK_GAME", "/buttons/btnQuickGame.png", 210, 550 );
-    buttonsOfPage[1] = new Button( "SETTINGS", "/buttons/btnSettings.png", 210, 620 );
-    buttonsOfPage[2] = new Button( "RULES", "/buttons/btnRulesOfGo.png", 210, 690 );
-    buttonsOfPage[3] = new Button( "EXIT", "/buttons/btnExit.png", 210, 760 );
+    buttonsOfPage[0] = new Button( "/buttons/btnQuickGame.png", 210, 550 );
+    buttonsOfPage[1] = new Button( "/buttons/btnSettings.png", 210, 620 );
+    buttonsOfPage[2] = new Button( "/buttons/btnRulesOfGo.png", 210, 690 );
+    buttonsOfPage[3] = new Button( "/buttons/btnExit.png", 210, 760 );
 
     setupCanvas();
     add( canvas );
@@ -61,42 +59,20 @@ public class StartDisplay extends AbstractDisplay {
     } );
   }
 
-  class StartCanvas extends Canvas {
-    private static final long serialVersionUID  = 1L;
-    private final Image       background        = ImageIO.read( getClass().getResourceAsStream( "/openScreen2.png" ) );
-    int                       paddingMultiplier = 0;
+  //class StartCanvas extends Canvas {
+  class StartCanvas extends AbstractCanvas {
+    private static final long serialVersionUID = 1L;
+    private final Image       background       = ImageIO.read( getClass().getResourceAsStream( "/openScreen2.png" ) );
 
-    public StartCanvas() throws IOException, FontFormatException {
-
-    }
+    StartCanvas() throws IOException {}
 
     @Override
-    public void paint( Graphics g ) {
-      re_display( g );
-    }
-
-    @Override
-    public void update( Graphics g ) {
-      re_display( g );
-    }
-
-    private void drawButton( Graphics g, Button b ) {
-      g.drawImage( b.image, b.x, b.y, null );
-    }
-
-    public void re_display( Graphics g ) {
-
-      final Dimension dim = getSize();
-      Image offscreen = createImage( dim.width, dim.height );
-      Graphics g0 = offscreen.getGraphics();
-
+    protected void drawContent( Graphics g0 ) {
       g0.drawImage( background, 0, 0, null );
 
       for( Button button : buttonsOfPage )
         drawButton( g0, button );
-
-      g.drawImage( offscreen, 0, 0, this );
-    } // re_display
+    }
   }
 
   public void openPageInDefaultBrowser( String url ) {

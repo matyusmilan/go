@@ -1,9 +1,7 @@
 package com.mmatyus.go.gui;
 
 import java.awt.AlphaComposite;
-import java.awt.Canvas;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.Graphics;
@@ -29,7 +27,7 @@ import com.mmatyus.go.model.PlayerType;
 public class SettingsDisplay extends AbstractDisplay {
   private static final long   serialVersionUID = 1L;
   private static final String TITLE            = "g(\u03C9) – GOmega / Settings";
-  private MyCanvas            canvas           = new MyCanvas();
+  private SettingsCanvas      canvas           = new SettingsCanvas();
   private int                 wizardPage       = 0;
   public Menu                 result           = null;
   private final GameConfig    gameConfig;
@@ -46,7 +44,7 @@ public class SettingsDisplay extends AbstractDisplay {
       @Override
       public void mouseClicked( MouseEvent e ) {
         if( wizardPage < 3 ) {
-          if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
+          if( canvas.btnNext.hasPoint( e.getPoint() ) ) {
             if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH ) {
               setVisible( false );
               result = Menu.GAME;
@@ -59,7 +57,7 @@ public class SettingsDisplay extends AbstractDisplay {
             wizardPage++;
           }
         } else {
-          if( 1400 <= e.getPoint().x && e.getPoint().x <= 1550 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
+          if( canvas.btnStart.hasPoint( e.getPoint() ) ) {
             setVisible( false );
             result = Menu.GAME;
             dispose();
@@ -67,7 +65,6 @@ public class SettingsDisplay extends AbstractDisplay {
           }
         }
         if( canvas.btnBack.hasPoint( e.getPoint() ) ) {
-          //if( 50 <= e.getPoint().x && e.getPoint().x <= 200 && 800 <= e.getPoint().y && e.getPoint().y <= 830 ) {
           if( 0 < wizardPage ) {
             if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 2 ) {
               wizardPage--;
@@ -84,14 +81,9 @@ public class SettingsDisplay extends AbstractDisplay {
         Player[] players = new Player[2];
         switch( wizardPage ) {
           case 0:
-            padding = 500;
             for( BoardType bt : BoardType.values() ) {
-              if( bt != gameConfig.getBoardType() ) {
-                if( 130 + padding * i <= e.getPoint().x && e.getPoint().x <= 130 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
-                  gameConfig.setBoardType( bt );
-                }
-              }
-              i++;
+              if( bt != gameConfig.getBoardType() && canvas.btnSetBoardType.get( bt ).hasPoint( e.getPoint() ) )
+                gameConfig.setBoardType( bt );
             }
             if( gameConfig.getBoardType() != BoardType.SMALL ) {
               gameConfig.setGameType( GameType.HVH );
@@ -102,14 +94,9 @@ public class SettingsDisplay extends AbstractDisplay {
             }
             break;
           case 1:
-            padding = 500;
             for( GameType gt : GameType.values() ) {
-              if( gt != gameConfig.getGameType() ) {
-                if( 130 + padding * i <= e.getPoint().x && e.getPoint().x <= 130 + 329 + padding * i && 220 <= e.getPoint().y && e.getPoint().y <= 220 + 329 ) {
-                  gameConfig.setGameType( gt );
-                }
-              }
-              i++;
+              if( gt != gameConfig.getGameType() && canvas.btnSetGameType.get( gt ).hasPoint( e.getPoint() ) )
+                gameConfig.setGameType( gt );
             }
             Player defaultComputer = new Player( PlayerType.COMPUTER, Algorithm.UCT, 1 );
             Player defaultHuman = new Player( PlayerType.HUMAN );
@@ -193,47 +180,36 @@ public class SettingsDisplay extends AbstractDisplay {
     } );
   }
 
-  class MyCanvas extends Canvas {
+  class SettingsCanvas extends AbstractCanvas {
     private static final long serialVersionUID = 1L;
 
-    public MyCanvas() throws IOException, FontFormatException {}
+    public SettingsCanvas() throws IOException, FontFormatException {}
 
-    final Image              background      = ImageIO.read( getClass().getResourceAsStream( "/goBackground3.png" ) );
-    final Map<String, Image> btnSetBoardType = new HashMap<String, Image>();
-    final Map<String, Image> btnSetGameType  = new HashMap<String, Image>();
-    final Image              btnStart        = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnStart.png" ) );
-    final Button             btnBack         = new Button( "BACK", "/buttons/btnBack.png", 50, 800 );
-    // final Image           btnBack         = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBack.png" ) );
-    final Image              btnNext         = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnNext.png" ) );
-    final Image              btnRadioOff     = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOff.png" ) );
-    final Image              btnRadioOn      = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOn.png" ) );
-    final Image              player01Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/w0.png" ) );
-    final Image              player02Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
-    final Font               font0           = Font.createFont( Font.TRUETYPE_FONT, getClass().getResourceAsStream( "/Kingthings_Petrock.ttf" ) );
-    final Color              brownColor      = new Color( 67, 20, 16 );
+    final Image                        background      = ImageIO.read( getClass().getResourceAsStream( "/goBackground3.png" ) );
+
+    final Map<BoardType, ToggleButton> btnSetBoardType = new HashMap<BoardType, ToggleButton>();
+    final Map<GameType, ToggleButton>  btnSetGameType  = new HashMap<GameType, ToggleButton>();
+
+    final Button                       btnStart        = new Button( "/buttons/btnStart.png", 1400, 800 );
+    final Button                       btnBack         = new Button( "/buttons/btnBack.png", 50, 800 );
+    final Button                       btnNext         = new Button( "/buttons/btnRadioOff.png", 1400, 800 );
+
+    final Image                        btnRadioOff     = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOff.png" ) );
+    final Image                        btnRadioOn      = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOn.png" ) );
+    final Image                        player01Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/w0.png" ) );
+    final Image                        player02Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
+    final Font                         font0           = Font.createFont( Font.TRUETYPE_FONT, getClass().getResourceAsStream( "/Kingthings_Petrock.ttf" ) );
+    final Color                        brownColor      = new Color( 67, 20, 16 );
 
     // Object initializer block
     {
-      btnSetBoardType.put( "btnBoardSMALLon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBoardSMALLon.png" ) ) );
-      btnSetBoardType.put( "btnBoardSMALLoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBoardSMALLoff.png" ) ) );
+      btnSetBoardType.put( BoardType.SMALL, new ToggleButton( "SMALL_BOARD", "/buttons/btnBoardSMALLon.png", "/buttons/btnBoardSMALLoff.png", 130, 220 ) );
+      btnSetBoardType.put( BoardType.MEDIUM, new ToggleButton( "SMALL_BOARD", "/buttons/btnBoardMEDIUMon.png", "/buttons/btnBoardMEDIUMoff.png", 630, 220 ) );
+      btnSetBoardType.put( BoardType.LARGE, new ToggleButton( "SMALL_BOARD", "/buttons/btnBoardLARGEon.png", "/buttons/btnBoardLARGEoff.png", 1130, 220 ) );
 
-      btnSetBoardType.put( "btnBoardMEDIUMon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBoardMEDIUMon.png" ) ) );
-      btnSetBoardType.put( "btnBoardMEDIUMoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBoardMEDIUMoff.png" ) ) );
-
-      btnSetBoardType.put( "btnBoardLARGEon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBoardLARGEon.png" ) ) );
-      btnSetBoardType.put( "btnBoardLARGEoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnBoardLARGEoff.png" ) ) );
-
-      btnSetGameType.put( "btnGameTypeCVCon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeCVCon.png" ) ) );
-      btnSetGameType.put( "btnGameTypeCVCoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeCVCoff.png" ) ) );
-
-      btnSetGameType.put( "btnGameTypeHVCon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeHVCon.png" ) ) );
-      btnSetGameType.put( "btnGameTypeHVCoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeHVCoff.png" ) ) );
-
-      btnSetGameType.put( "btnGameTypeCVHon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeCVHon.png" ) ) );
-      btnSetGameType.put( "btnGameTypeCVHoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeCVHoff.png" ) ) );
-
-      btnSetGameType.put( "btnGameTypeHVHon", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeHVHon.png" ) ) );
-      btnSetGameType.put( "btnGameTypeHVHoff", ImageIO.read( getClass().getResourceAsStream( "/buttons/btnGameTypeHVHoff.png" ) ) );
+      btnSetGameType.put( GameType.HVC, new ToggleButton( "HUMAN_VS_ROBOT", "/buttons/btnGameTypeHVCon.png", "/buttons/btnGameTypeHVCoff.png", 130, 220 ) );
+      btnSetGameType.put( GameType.CVH, new ToggleButton( "HUMAN_VS_ROBOT", "/buttons/btnGameTypeCVHon.png", "/buttons/btnGameTypeCVHoff.png", 630, 220 ) );
+      btnSetGameType.put( GameType.HVH, new ToggleButton( "HUMAN_VS_ROBOT", "/buttons/btnGameTypeHVHon.png", "/buttons/btnGameTypeHVHoff.png", 1130, 220 ) );
     }
 
     @Override
@@ -253,14 +229,8 @@ public class SettingsDisplay extends AbstractDisplay {
       drawtabString( g2d, message, SETTINGPOS_LEFT, SETTINGPOS_TOP + row * SETTING_ROWHEIGHT );
     }
 
-    private void drawButton( Graphics g, Button b ) {
-      g.drawImage( b.image, b.x, b.y, null );
-    }
-
-    public void re_display( Graphics g ) {
-      final Dimension dim = getSize();
-      Image offscreen = createImage( dim.width, dim.height );
-      Graphics g0 = offscreen.getGraphics();
+    @Override
+    protected void drawContent( Graphics g0 ) {
       Graphics2D g2d = (Graphics2D)g0;
 
       g0.drawImage( background, 0, 0, null );
@@ -271,13 +241,12 @@ public class SettingsDisplay extends AbstractDisplay {
       g2d.setFont( font1 );
       if( wizardPage < 3 ) {
         if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH )
-          g0.drawImage( btnStart, 1400, 800, null );
+          drawButton( g0, btnStart );
         else
-          g0.drawImage( btnNext, 1400, 800, null );
+          drawButton( g0, btnNext );
       } else {
-        g0.drawImage( btnStart, 1400, 800, null );
+        drawButton( g0, btnStart );
       }
-
       drawButton( g0, btnBack );
 
       g2d.drawString( "Settings: ", 50, 50 );
@@ -293,8 +262,7 @@ public class SettingsDisplay extends AbstractDisplay {
           g2d.setFont( font1 );
           final int BOARDTYPES_COL_WIDTH = 500;
           for( BoardType bt : BoardType.values() ) {
-            final String onOff = ( bt == gameConfig.getBoardType() ? "on" : "off" );
-            g0.drawImage( btnSetBoardType.get( "btnBoard" + bt.name() + onOff ), 130 + BOARDTYPES_COL_WIDTH * i, 220, null );
+            drawToggleButton( g0, btnSetBoardType.get( bt ), ( bt == gameConfig.getBoardType() ? ToggleButton.ON : ToggleButton.OFF ) );
             g2d.drawString( bt.name() + " (" + bt.label + ")", 220 + BOARDTYPES_COL_WIDTH * i, 610 );
             i++;
           }
@@ -309,8 +277,7 @@ public class SettingsDisplay extends AbstractDisplay {
           font1 = font0.deriveFont( 32F );
           g2d.setFont( font1 );
           for( GameType gt : GameType.values() ) {
-            final String onOff = ( gt == gameConfig.getGameType() ? "on" : "off" );
-            g0.drawImage( btnSetGameType.get( "btnGameType" + gt.name() + onOff ), 130 + GAMETYPE_COL_WIDTH * i, 220, null );
+            drawToggleButton( g0, btnSetGameType.get( gt ), ( gt == gameConfig.getGameType() ? ToggleButton.ON : ToggleButton.OFF ) );
             g2d.drawString( gt.label, 180 + GAMETYPE_COL_WIDTH * i, 610 );
             i++;
           }
@@ -382,9 +349,7 @@ public class SettingsDisplay extends AbstractDisplay {
         default:
           break;
       }
-      g.drawImage( offscreen, 0, 0, this );
-
-    } // re_display()
+    }
 
     private void drawtabString( Graphics g, String text, int x, int y ) {
       for( String line : text.split( "\t" ) )
