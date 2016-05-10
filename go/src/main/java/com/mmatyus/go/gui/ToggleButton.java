@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-class ToggleButton {
+public class ToggleButton {
   public static final int OFF = 0;
   public static final int ON  = 1;
 

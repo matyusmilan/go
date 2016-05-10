@@ -72,7 +72,7 @@ public class GameController {
     final Board board = new Board( gc.getBoardType(), gc.getHandicap(), KOMI );
     final BoardDisplay bd = new BoardDisplay( this, board, gc );
     bd.setVisible( true );
-    bd.firstMoveOfComputer();
+    bd.canvas.firstMoveOfComputer();
     return bd;
   }
 

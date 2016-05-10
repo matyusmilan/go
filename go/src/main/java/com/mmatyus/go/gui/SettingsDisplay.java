@@ -1,20 +1,11 @@
 package com.mmatyus.go.gui;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.FontFormatException;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import javax.imageio.ImageIO;
-
+import com.mmatyus.go.gui.canvas.SettingsCanvas;
 import com.mmatyus.go.model.Algorithm;
 import com.mmatyus.go.model.Board;
 import com.mmatyus.go.model.BoardType;
@@ -27,14 +18,12 @@ import com.mmatyus.go.model.PlayerType;
 public class SettingsDisplay extends AbstractDisplay {
   private static final long   serialVersionUID = 1L;
   private static final String TITLE            = "g(\u03C9) – GOmega / Settings";
-  private SettingsCanvas      canvas           = new SettingsCanvas();
-  private int                 wizardPage       = 0;
+  private SettingsCanvas      canvas;
   public Menu                 result           = null;
-  private final GameConfig    gameConfig;
 
   public SettingsDisplay( final Object waiter, final GameConfig actual ) throws IOException, FontFormatException {
     super( waiter, TITLE );
-    this.gameConfig = actual;
+    this.canvas = new SettingsCanvas( actual );
     setupCanvas();
     add( canvas );
   }
@@ -43,21 +32,22 @@ public class SettingsDisplay extends AbstractDisplay {
     canvas.addMouseListener( new MouseAdapter() {
       @Override
       public void mouseClicked( MouseEvent e ) {
-        if( wizardPage < 3 ) {
+        if( canvas.wizardPage < 3 ) {
           if( canvas.btnNext.hasPoint( e.getPoint() ) ) {
-            if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH ) {
+            if( canvas.wizardPage == 2 && canvas.gameConfig.getGameType() == GameType.HVH ) {
               setVisible( false );
               result = Menu.GAME;
               dispose();
               return;
             }
-            if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 0 ) {
-              wizardPage++;
+            if( canvas.gameConfig.getBoardType() != BoardType.SMALL && canvas.wizardPage == 0 ) {
+              canvas.wizardPage++;
             }
-            wizardPage++;
+            canvas.wizardPage++;
           }
         } else {
           if( canvas.btnStart.hasPoint( e.getPoint() ) ) {
+            System.out.println( "start" );
             setVisible( false );
             result = Menu.GAME;
             dispose();
@@ -65,11 +55,11 @@ public class SettingsDisplay extends AbstractDisplay {
           }
         }
         if( canvas.btnBack.hasPoint( e.getPoint() ) ) {
-          if( 0 < wizardPage ) {
-            if( gameConfig.getBoardType() != BoardType.SMALL && wizardPage == 2 ) {
-              wizardPage--;
+          if( 0 < canvas.wizardPage ) {
+            if( canvas.gameConfig.getBoardType() != BoardType.SMALL && canvas.wizardPage == 2 ) {
+              canvas.wizardPage--;
             }
-            wizardPage--;
+            canvas.wizardPage--;
           } else {
             result = Menu.START;
             dispose();
@@ -79,28 +69,28 @@ public class SettingsDisplay extends AbstractDisplay {
         int padding = 50;
         int i = 0;
         Player[] players = new Player[2];
-        switch( wizardPage ) {
+        switch( canvas.wizardPage ) {
           case 0:
             for( BoardType bt : BoardType.values() ) {
-              if( bt != gameConfig.getBoardType() && canvas.btnSetBoardType.get( bt ).hasPoint( e.getPoint() ) )
-                gameConfig.setBoardType( bt );
+              if( bt != canvas.gameConfig.getBoardType() && canvas.btnSetBoardType.get( bt ).hasPoint( e.getPoint() ) )
+                canvas.gameConfig.setBoardType( bt );
             }
-            if( gameConfig.getBoardType() != BoardType.SMALL ) {
-              gameConfig.setGameType( GameType.HVH );
+            if( canvas.gameConfig.getBoardType() != BoardType.SMALL ) {
+              canvas.gameConfig.setGameType( GameType.HVH );
               Player defaultHuman = new Player( PlayerType.HUMAN );
               players[Board.BLACK] = defaultHuman;
               players[Board.WHITE] = defaultHuman;
-              gameConfig.setPlayers( players );
+              canvas.gameConfig.setPlayers( players );
             }
             break;
           case 1:
             for( GameType gt : GameType.values() ) {
-              if( gt != gameConfig.getGameType() && canvas.btnSetGameType.get( gt ).hasPoint( e.getPoint() ) )
-                gameConfig.setGameType( gt );
+              if( gt != canvas.gameConfig.getGameType() && canvas.btnSetGameType.get( gt ).hasPoint( e.getPoint() ) )
+                canvas.gameConfig.setGameType( gt );
             }
             Player defaultComputer = new Player( PlayerType.COMPUTER, Algorithm.UCT, 1 );
             Player defaultHuman = new Player( PlayerType.HUMAN );
-            switch( gameConfig.getGameType() ) {
+            switch( canvas.gameConfig.getGameType() ) {
               case CVH:
                 players[Board.BLACK] = defaultComputer;
                 players[Board.WHITE] = defaultHuman;
@@ -114,14 +104,14 @@ public class SettingsDisplay extends AbstractDisplay {
                 players[Board.WHITE] = defaultHuman;
                 break;
             }
-            gameConfig.setPlayers( players );
+            canvas.gameConfig.setPlayers( players );
             break;
           case 2:
             padding = 60;
             for( int h = 0; h <= Handicap.MAX; h++ ) {
-              if( h != gameConfig.getHandicap() ) {
+              if( h != canvas.gameConfig.getHandicap() ) {
                 if( ( ( h < 5 ) ? 90 : 600 ) <= e.getPoint().x && e.getPoint().x <= ( ( h < 5 ) ? 90 : 600 ) + 150 && ( h % 5 + 1 ) * padding + 230 <= e.getPoint().y && e.getPoint().y <= ( h % 5 + 1 ) * padding + 230 + 30 ) {
-                  gameConfig.setHandicap( h );
+                  canvas.gameConfig.setHandicap( h );
                 }
               }
             }
@@ -131,13 +121,13 @@ public class SettingsDisplay extends AbstractDisplay {
             i = 0;
             padding = 45;
             String[] strength_label = { "Easy", "Medium", "Hard" };
-            players = gameConfig.getPlayers();
+            players = canvas.gameConfig.getPlayers();
             for( Algorithm alg : Algorithm.values() ) {
               if( players[Board.BLACK].playerType == PlayerType.COMPUTER ) {
                 if( alg != players[Board.BLACK].algo ) {
                   if( 100 <= e.getPoint().x && e.getPoint().x <= 100 + 300 && i * padding + 435 <= e.getPoint().y && e.getPoint().y <= i * padding + 435 + 30 ) {
                     players[Board.BLACK] = new Player( PlayerType.COMPUTER, alg, players[Board.BLACK].param );
-                    gameConfig.setPlayers( players );
+                    canvas.gameConfig.setPlayers( players );
                   }
                 }
               }
@@ -145,7 +135,7 @@ public class SettingsDisplay extends AbstractDisplay {
                 if( alg != players[Board.WHITE].algo ) {
                   if( 700 <= e.getPoint().x && e.getPoint().x <= 700 + 300 && i * padding + 435 <= e.getPoint().y && e.getPoint().y <= i * padding + 435 + 30 ) {
                     players[Board.WHITE] = new Player( PlayerType.COMPUTER, alg, players[Board.WHITE].param );
-                    gameConfig.setPlayers( players );
+                    canvas.gameConfig.setPlayers( players );
                   }
                 }
               }
@@ -157,7 +147,7 @@ public class SettingsDisplay extends AbstractDisplay {
                 if( s != players[Board.BLACK].param ) {
                   if( 100 <= e.getPoint().x && e.getPoint().x <= 100 + 100 && s * padding + 660 <= e.getPoint().y && e.getPoint().y <= s * padding + 660 + 30 ) {
                     players[Board.BLACK] = new Player( PlayerType.COMPUTER, players[Board.BLACK].algo, s );
-                    gameConfig.setPlayers( players );
+                    canvas.gameConfig.setPlayers( players );
                   }
                 }
               }
@@ -167,7 +157,7 @@ public class SettingsDisplay extends AbstractDisplay {
                 if( s != players[Board.WHITE].param ) {
                   if( 700 <= e.getPoint().x && e.getPoint().x <= 700 + 100 && s * padding + 660 <= e.getPoint().y && e.getPoint().y <= s * padding + 660 + 30 ) {
                     players[Board.WHITE] = new Player( PlayerType.COMPUTER, players[Board.WHITE].algo, s );
-                    gameConfig.setPlayers( players );
+                    canvas.gameConfig.setPlayers( players );
                   }
                 }
               }
@@ -179,184 +169,6 @@ public class SettingsDisplay extends AbstractDisplay {
       }
     } );
   }
-
-  class SettingsCanvas extends AbstractCanvas {
-    private static final long serialVersionUID = 1L;
-
-    public SettingsCanvas() throws IOException, FontFormatException {}
-
-    final Image                        background      = ImageIO.read( getClass().getResourceAsStream( "/goBackground3.png" ) );
-
-    final Map<BoardType, ToggleButton> btnSetBoardType = new HashMap<BoardType, ToggleButton>();
-    final Map<GameType, ToggleButton>  btnSetGameType  = new HashMap<GameType, ToggleButton>();
-
-    final Button                       btnStart        = new Button( "/buttons/btnStart.png", 1400, 800 );
-    final Button                       btnBack         = new Button( "/buttons/btnBack.png", 50, 800 );
-    final Button                       btnNext         = new Button( "/buttons/btnRadioOff.png", 1400, 800 );
-
-    final Image                        btnRadioOff     = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOff.png" ) );
-    final Image                        btnRadioOn      = ImageIO.read( getClass().getResourceAsStream( "/buttons/btnRadioOn.png" ) );
-    final Image                        player01Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/w0.png" ) );
-    final Image                        player02Disk    = ImageIO.read( getClass().getResourceAsStream( "/stones/b.png" ) );
-    final Font                         font0           = Font.createFont( Font.TRUETYPE_FONT, getClass().getResourceAsStream( "/Kingthings_Petrock.ttf" ) );
-    final Color                        brownColor      = new Color( 67, 20, 16 );
-
-    // Object initializer block
-    {
-      btnSetBoardType.put( BoardType.SMALL, new ToggleButton( "SMALL_BOARD", "/buttons/btnBoardSMALLon.png", "/buttons/btnBoardSMALLoff.png", 130, 220 ) );
-      btnSetBoardType.put( BoardType.MEDIUM, new ToggleButton( "SMALL_BOARD", "/buttons/btnBoardMEDIUMon.png", "/buttons/btnBoardMEDIUMoff.png", 630, 220 ) );
-      btnSetBoardType.put( BoardType.LARGE, new ToggleButton( "SMALL_BOARD", "/buttons/btnBoardLARGEon.png", "/buttons/btnBoardLARGEoff.png", 1130, 220 ) );
-
-      btnSetGameType.put( GameType.HVC, new ToggleButton( "HUMAN_VS_ROBOT", "/buttons/btnGameTypeHVCon.png", "/buttons/btnGameTypeHVCoff.png", 130, 220 ) );
-      btnSetGameType.put( GameType.CVH, new ToggleButton( "HUMAN_VS_ROBOT", "/buttons/btnGameTypeCVHon.png", "/buttons/btnGameTypeCVHoff.png", 630, 220 ) );
-      btnSetGameType.put( GameType.HVH, new ToggleButton( "HUMAN_VS_ROBOT", "/buttons/btnGameTypeHVHon.png", "/buttons/btnGameTypeHVHoff.png", 1130, 220 ) );
-    }
-
-    @Override
-    public void paint( Graphics g ) {
-      re_display( g );
-    }
-
-    @Override
-    public void update( Graphics g ) {
-      re_display( g );
-    }
-
-    private void drawSetting( Graphics2D g2d, int row, final String message ) {
-      final int SETTINGPOS_LEFT = 10;
-      final int SETTINGPOS_TOP = 100;
-      final int SETTING_ROWHEIGHT = 50;
-      drawtabString( g2d, message, SETTINGPOS_LEFT, SETTINGPOS_TOP + row * SETTING_ROWHEIGHT );
-    }
-
-    @Override
-    protected void drawContent( Graphics g0 ) {
-      Graphics2D g2d = (Graphics2D)g0;
-
-      g0.drawImage( background, 0, 0, null );
-      Font font1;
-
-      g2d.setColor( brownColor );
-      font1 = font0.deriveFont( 48F );
-      g2d.setFont( font1 );
-      if( wizardPage < 3 ) {
-        if( wizardPage == 2 && gameConfig.getGameType() == GameType.HVH )
-          drawButton( g0, btnStart );
-        else
-          drawButton( g0, btnNext );
-      } else {
-        drawButton( g0, btnStart );
-      }
-      drawButton( g0, btnBack );
-
-      g2d.drawString( "Settings: ", 50, 50 );
-      font1 = font0.deriveFont( 40F );
-      g2d.setFont( font1 );
-      int i = 0;
-
-      switch( wizardPage ) {
-        case 0: {
-          drawtabString( g2d, "1.) Board size: ", 10, 100 );
-          i = 0;
-          font1 = font0.deriveFont( 32F );
-          g2d.setFont( font1 );
-          final int BOARDTYPES_COL_WIDTH = 500;
-          for( BoardType bt : BoardType.values() ) {
-            drawToggleButton( g0, btnSetBoardType.get( bt ), ( bt == gameConfig.getBoardType() ? ToggleButton.ON : ToggleButton.OFF ) );
-            g2d.drawString( bt.name() + " (" + bt.label + ")", 220 + BOARDTYPES_COL_WIDTH * i, 610 );
-            i++;
-          }
-          break;
-        }
-        case 1: {
-          final BoardType bt = gameConfig.getBoardType();
-          drawSetting( g2d, 0, "1.) Board size:\t\t\t\t\t\t" + bt.name() + " (" + bt.label + ")" );
-          drawSetting( g2d, 1, "2.) Game type:" );
-          i = 0;
-          final int GAMETYPE_COL_WIDTH = 500;
-          font1 = font0.deriveFont( 32F );
-          g2d.setFont( font1 );
-          for( GameType gt : GameType.values() ) {
-            drawToggleButton( g0, btnSetGameType.get( gt ), ( gt == gameConfig.getGameType() ? ToggleButton.ON : ToggleButton.OFF ) );
-            g2d.drawString( gt.label, 180 + GAMETYPE_COL_WIDTH * i, 610 );
-            i++;
-          }
-          break;
-        }
-        case 2: {
-          final BoardType bt = gameConfig.getBoardType();
-          final GameType gt = gameConfig.getGameType();
-          drawSetting( g2d, 0, "1.) Board size:\t\t\t\t\t\t" + bt.name() + " (" + bt.label + ")" );
-          drawSetting( g2d, 1, "2.) Game type:\t\t\t\t\t\t" + gt.label );
-          drawSetting( g2d, 2, "3.) Set handicap: " );
-          font1 = font0.deriveFont( 32F );
-          g2d.setFont( font1 );
-          final int HANDICAPS_ROW_HEIGHT = 60;
-          for( int h = 0; h <= Handicap.MAX; h++ ) {
-            g0.drawImage( ( h == gameConfig.getHandicap() ) ? btnRadioOn : btnRadioOff, ( h < 5 ) ? 90 : 600, ( h % 5 + 1 ) * HANDICAPS_ROW_HEIGHT + 230, null );
-            g2d.drawString( h + " stone" + ( ( h == 1 ) ? "" : "s" ), ( h < 5 ) ? 120 : 630, ( h % 5 + 1 ) * HANDICAPS_ROW_HEIGHT + 250 );
-          }
-          break;
-        }
-        case 3: {
-          drawSetting( g2d, 0, "1.) Board size:\t\t\t\t\t\t" + gameConfig.getBoardType().name() + " (" + gameConfig.getBoardType().label + ")" );
-          drawSetting( g2d, 1, "2.) Game type:\t\t\t\t\t\t" + gameConfig.getGameType().label );
-          drawSetting( g2d, 2, "3.) Set handicap:\t\t\t\t\t\t" + gameConfig.getHandicap() );
-          drawSetting( g2d, 3, "4.) Computer: " );
-          drawSetting( g2d, 6, "a.) Algorithm: " );
-          drawSetting( g2d, 11, "b.) Strength: " );
-          g2d.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, .2f ) );
-          g2d.setColor( Color.BLACK );
-          int r = 50;
-          g2d.fillOval( 120 - r + 4, 320 - r + 4, 2 * r, 2 * r );
-          g2d.fillOval( 720 - r + 4, 320 - r + 4, 2 * r, 2 * r );
-          g2d.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, 1.0f ) );
-          g0.drawImage( player02Disk.getScaledInstance( 2 * r, 2 * r, Image.SCALE_AREA_AVERAGING ), 120 - r, 320 - r, 2 * r, 2 * r, this );
-          g0.drawImage( player01Disk.getScaledInstance( 2 * r, 2 * r, Image.SCALE_AREA_AVERAGING ), 720 - r, 320 - r, 2 * r, 2 * r, this );
-          Player[] players = gameConfig.getPlayers();
-          g2d.drawString( players[Board.BLACK].playerType.toString(), 190, 330 );
-          g2d.drawString( players[Board.WHITE].playerType.toString(), 790, 330 );
-          i = 0;
-          final int COMPUTER_SETTING_ROW_HEIGHT = 45;
-          String[] strength_label = { "Easy", "Medium", "Hard" };
-          for( Algorithm alg : Algorithm.values() ) {
-            if( players[Board.BLACK].playerType == PlayerType.COMPUTER ) {
-              g0.drawImage( ( alg == players[Board.BLACK].algo ) ? btnRadioOn : btnRadioOff, 100, i * COMPUTER_SETTING_ROW_HEIGHT + 435, null );
-              g2d.drawString( alg.label, 130, i * COMPUTER_SETTING_ROW_HEIGHT + 460 );
-            }
-
-            if( players[Board.WHITE].playerType == PlayerType.COMPUTER ) {
-              g0.drawImage( ( alg == players[Board.WHITE].algo ) ? btnRadioOn : btnRadioOff, 700, i * COMPUTER_SETTING_ROW_HEIGHT + 435, null );
-              g2d.drawString( alg.label, 730, i * COMPUTER_SETTING_ROW_HEIGHT + 460 );
-            }
-
-            i++;
-          }
-          i = 0;
-          for( int s = 0; s < strength_label.length; s++ ) {
-            if( players[Board.BLACK].playerType == PlayerType.COMPUTER ) {
-              g0.drawImage( ( s == players[Board.BLACK].param ) ? btnRadioOn : btnRadioOff, 100, i * COMPUTER_SETTING_ROW_HEIGHT + 660, null );
-              g2d.drawString( strength_label[s], 130, i * COMPUTER_SETTING_ROW_HEIGHT + 685 );
-            }
-            if( players[Board.WHITE].playerType == PlayerType.COMPUTER ) {
-              g0.drawImage( ( s == players[Board.WHITE].param ) ? btnRadioOn : btnRadioOff, 700, i * COMPUTER_SETTING_ROW_HEIGHT + 660, null );
-              g2d.drawString( strength_label[s], 730, i * COMPUTER_SETTING_ROW_HEIGHT + 685 );
-            }
-            i++;
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    }
-
-    private void drawtabString( Graphics g, String text, int x, int y ) {
-      for( String line : text.split( "\t" ) )
-        g.drawString( line, x += g.getFontMetrics().getHeight(), y );
-    }
-
-  } // class MyCanvas
 
   @Override
   protected void closing() {

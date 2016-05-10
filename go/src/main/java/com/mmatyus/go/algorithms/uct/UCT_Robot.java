@@ -50,7 +50,6 @@ public class UCT_Robot implements Robot {
       root.buildTree( randomPlayerBoard );
       if( 0 == i % 1000 ) {
         pc.setActual( i );
-        //System.err.println( "UCT: " + pc.getCurrentProgress() );
       }
       if( Thread.interrupted() ) {
         throw new InterruptedException();
@@ -58,8 +57,8 @@ public class UCT_Robot implements Robot {
     }
 
     if( policy.useUCBPrior ) {
-      //System.out.println( "UCT Tree" );
-      //root.dump( 2, 2, policy.iterations, "" );
+      System.out.println( "UCT Tree" );
+      root.dump( 2, 3, policy.iterations, "" );
     }
     if( root.getWinRate() < policy.passThreshold ) {
       System.out.println( "Best action: PASS" );

@@ -53,6 +53,22 @@ public class UCT_Node<Action> {
     bestChild( game ).buildTree( game );
   }
 
+  protected UCT_Node<Action> bestChildForMove() {
+    double maxScore = -Double.MAX_VALUE;
+    UCT_Node<Action> bestNode = null;
+    for( UCT_Node<Action> node : children ) {
+      if( node == null ) {
+        break;
+      }
+      double score = node.statistic.mean();
+      if( score > maxScore ) {
+        maxScore = score;
+        bestNode = node;
+      }
+    }
+    return bestNode;
+  }
+
   protected UCT_Node<Action> bestChild( Game<Action> game ) {
     double maxscore = -Double.MAX_VALUE;
     UCT_Node<Action> bestNode = null;
@@ -80,7 +96,6 @@ public class UCT_Node<Action> {
     }
     UCB<Action> ucb = ucb_pair.getPrimary();
     Action a = ucb.best( actions, policy );
-    //System.out.println( "preferredAction: " + a + " from " + actions.size() );
     actions.remove( a );
     return a;
   }
@@ -108,22 +123,6 @@ public class UCT_Node<Action> {
     return node == null ? null : node.action;
   }
 
-  protected UCT_Node<Action> bestChildForMove() {
-    double maxScore = -Double.MAX_VALUE;
-    UCT_Node<Action> bestNode = null;
-    for( UCT_Node<Action> node : children ) {
-      if( node == null ) {
-        break;
-      }
-      double score = node.statistic.mean();
-      if( score > maxScore ) {
-        maxScore = score;
-        bestNode = node;
-      }
-    }
-    return bestNode;
-  }
-
   public int getSubTreeDepth() {
     int max = 0;
     for( UCT_Node<Action> node : children ) {
@@ -137,23 +136,23 @@ public class UCT_Node<Action> {
     return max + 1;
   }
 
-  /*
-   * public int getSubTreeSize() {
-   * int n = 1;
-   * for( UCT_Node<Action> node : children ) {
-   * if( node != null ) {
-   * n += node.getSubTreeSize();
-   * }
-   * }
-   * return n;
-   * }
-   */
+  public int getSubTreeSize() {
+    int n = 1;
+    for( UCT_Node<Action> node : children ) {
+      if( node != null ) {
+        n += node.getSubTreeSize();
+      }
+    }
+    return n;
+  }
 
   public void dump( int depth, int width, int nn, String prefix ) {
     System.out.print( prefix );
-    System.out.print( "a=" + action + ", c=" + statistic.count()
-//                  + ", t=" + getSubTreeSize()
-        + ", d=" + getSubTreeDepth() + ", m=" + statistic.mean() + ", s=" + statistic.score( nn, policy ) );
+    System.out.print( "action=" + action + //
+        ", count=" + statistic.count() + //
+        ", depth=" + getSubTreeDepth() + //
+        ", mean=" + statistic.mean() + //
+        ", score=" + statistic.score( nn, policy ) );
     System.out.println();
     if( depth > 0 ) {
       TreeMap<Double, List<UCT_Node<Action>>> m = new TreeMap<>( Collections.reverseOrder() );

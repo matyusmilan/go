@@ -9,12 +9,12 @@ import com.mmatyus.go.model.PlayerPolicy;
 
 public class UCB<Action> {
   protected Statistic              statistic  = new Statistic();
-  protected Map<Action, Statistic> statistics = new HashMap<>();
+  protected Map<Action, Statistic> listOfStatistic = new HashMap<>();
   protected int                    emptyStatisticCount;
   protected static Random          rand       = new Random();
 
   public void addStatistic( Action action, double value ) {
-    Statistic stat = statistics.get( action );
+    Statistic stat = listOfStatistic.get( action );
     if( stat != null ) {
       if( stat.count() == 0.0 && value != 0.0 ) {
         --emptyStatisticCount;
@@ -31,17 +31,17 @@ public class UCB<Action> {
   }
 
   public void addAction( Action action ) {
-    statistics.put( action, new Statistic() );
+    listOfStatistic.put( action, new Statistic() );
     ++emptyStatisticCount;
   }
 
   public void multiply( double alpha ) {
-    for( Statistic stat : statistics.values() ) {
+    for( Statistic stat : listOfStatistic.values() ) {
       stat.multiply( alpha );
     }
     statistic.multiply( alpha );
     if( alpha == 0.0 ) {
-      emptyStatisticCount = statistics.size();
+      emptyStatisticCount = listOfStatistic.size();
     }
   }
 
@@ -51,15 +51,14 @@ public class UCB<Action> {
     int k = rand.nextInt( emptyStatisticCount );
     for( Action action : actions ) {
       double score = policy.fpu;
-      Statistic stat = statistics.get( action );
+      Statistic stat = listOfStatistic.get( action );
       if( stat == null ) {
         stat = new Statistic();
-        statistics.put( action, stat );
+        listOfStatistic.put( action, stat );
       }
       if( stat.count() >= 0.00001 ) {
         score = stat.score( statistic.count(), policy );
       }
-//      System.out.println( "  A- " + action + " s: " + score );
       if( score > bestScore ) {
         if( stat.count() > 0 || k >= 0 ) {
           bestAction = action;

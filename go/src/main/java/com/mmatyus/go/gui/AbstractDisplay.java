@@ -18,7 +18,7 @@ public abstract class AbstractDisplay extends Frame {
     this.waiter = waiter;
     setTitle( title );
     setSize( WIDTH, HEIGHT );
-    setResizable( false );
+    setResizable( true );
     setIconImage( ImageIO.read( getClass().getResourceAsStream( "/icon128.png" ) ) );
 
     addWindowListener( new WindowAdapter() {

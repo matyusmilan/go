@@ -8,7 +8,7 @@ import javax.imageio.ImageIO;
 
 public class Button {
 
-  Button( String path, int x, int y ) {
+  public Button( String path, int x, int y ) {
     this.path = path;
     try {
       this.images = ImageIO.read( getClass().getResourceAsStream( path ) );
