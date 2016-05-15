@@ -1,7 +1,7 @@
 package com.mmatyus.go.model;
 
 public enum Algorithm {
-  UCT( "Monte-Carlo Tree Search + UCT", "Node count", new int[] { 100_000, 200_000, 300_000 } ),
+  UCT( "Monte-Carlo Tree Search + UCT", "Node count", new int[] { 10_000, 20_000, 30_000 } ),
   NEGAMAX( "NegaMax", "Depth", new int[] { 2, 3, 4 } ),
   NEGAMAX_AB( "NegaMax + AB", "Depth", new int[] { 2, 3, 4 } ),
   NEGAMAX_AB_TT( "NegaMax + AB + TT", "Depth", new int[] { 2, 3, 4 } );

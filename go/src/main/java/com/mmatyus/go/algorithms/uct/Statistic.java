@@ -1,6 +1,5 @@
 package com.mmatyus.go.algorithms.uct;
 
-import com.mmatyus.go.model.PlayerPolicy;
 
 public class Statistic {
   protected int    amount;
@@ -21,12 +20,13 @@ public class Statistic {
     return x / amount;
   }
 
-  public double score( double nn, PlayerPolicy policy ) {
+  public double score( double nn  ) {
     if( nn == 0 ) {
       return 0.0;
     }
-    double m = mean();
-    return m + policy.uctBias * Math.sqrt( Math.log( nn ) / amount * Math.min( 1. / 4, xx / amount - m * m + Math.sqrt( 2 * Math.log( nn ) / ( amount ) ) ) );
+    //double m = mean();
+    //return m + policy.uctBias * Math.sqrt( Math.log( nn ) / amount * Math.min( 1. / 4, xx / amount - m * m + Math.sqrt( 2 * Math.log( nn ) / ( amount ) ) ) );
+    return x / amount + Math.sqrt( 2 * Math.log( nn ) / amount );
   }
 
   public void multiply( double a ) {

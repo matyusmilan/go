@@ -76,7 +76,7 @@ public class UCT_Node<Action> {
       if( node == null ) {
         break;
       }
-      double score = node.statistic.score( statistic.count(), policy );
+      double score = node.statistic.score( statistic.count() );
       if( score > maxscore ) {
         maxscore = score;
         bestNode = node;
@@ -152,7 +152,7 @@ public class UCT_Node<Action> {
         ", count=" + statistic.count() + //
         ", depth=" + getSubTreeDepth() + //
         ", mean=" + statistic.mean() + //
-        ", score=" + statistic.score( nn, policy ) );
+        ", score=" + statistic.score( nn ) );
     System.out.println();
     if( depth > 0 ) {
       TreeMap<Double, List<UCT_Node<Action>>> m = new TreeMap<>( Collections.reverseOrder() );

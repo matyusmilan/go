@@ -4,14 +4,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import com.mmatyus.go.model.PlayerPolicy;
 
 public class UCB<Action> {
-  protected Statistic              statistic  = new Statistic();
+  protected Statistic              statistic       = new Statistic();
   protected Map<Action, Statistic> listOfStatistic = new HashMap<>();
   protected int                    emptyStatisticCount;
-  protected static Random          rand       = new Random();
+  protected static Random          rand            = new Random();
+  private static final Logger      LOGGER          = Logger.getLogger( UCB.class.getName() );
 
   public void addStatistic( Action action, double value ) {
     Statistic stat = listOfStatistic.get( action );
@@ -48,6 +50,7 @@ public class UCB<Action> {
   public Action best( List<Action> actions, PlayerPolicy policy ) {
     Action bestAction = null;
     double bestScore = -Double.MAX_VALUE;
+    LOGGER.info( "emptyStatisticCount: " + emptyStatisticCount );
     int k = rand.nextInt( emptyStatisticCount );
     for( Action action : actions ) {
       double score = policy.fpu;
@@ -57,7 +60,7 @@ public class UCB<Action> {
         listOfStatistic.put( action, stat );
       }
       if( stat.count() >= 0.00001 ) {
-        score = stat.score( statistic.count(), policy );
+        score = stat.score( statistic.count() );
       }
       if( score > bestScore ) {
         if( stat.count() > 0 || k >= 0 ) {

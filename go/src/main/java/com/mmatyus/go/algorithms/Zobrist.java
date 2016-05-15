@@ -6,9 +6,8 @@ import com.mmatyus.go.model.Board;
 import com.mmatyus.go.model.BoardType;
 
 public class Zobrist {
-  private final SecureRandom random     = new SecureRandom();
+  private final SecureRandom random = new SecureRandom();
   public final long          zArray[][];
-  private final long         zWhiteMove = random64();
   private final int          size;
 
   public Zobrist( BoardType boardType ) {
@@ -29,7 +28,6 @@ public class Zobrist {
   }
 
   public long getZobristHash( Board board ) {
-    boolean blackToMove = ( board.getNextPlayer() == Board.BLACK ) ? true : false;
     long returnZobristKey = 0;
     for( int pos = 0; pos < size; pos++ ) {
       if( board.getState( pos ) == Board.WHITE ) {
@@ -38,8 +36,6 @@ public class Zobrist {
         returnZobristKey ^= zArray[Board.BLACK][pos];
       }
     }
-    if( !blackToMove )
-      returnZobristKey ^= zWhiteMove;
     return returnZobristKey;
   }
 }

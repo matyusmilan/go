@@ -6,7 +6,6 @@ import com.mmatyus.go.algorithms.transposition.TranspositionTableEntry;
 import com.mmatyus.go.algorithms.transposition.TranspositionType;
 import com.mmatyus.go.model.Algorithm;
 import com.mmatyus.go.model.Board;
-import com.mmatyus.go.model.Robot;
 
 public class NegaMaxRobot implements Robot {
   public static final int     MAX_RUN_DEPTH = 7;
@@ -102,7 +101,7 @@ public class NegaMaxRobot implements Robot {
     result[1] = Integer.MIN_VALUE;
     if( depth == 0 || board.isGameOver() ) {
       result[0] = board.getLastMove();
-      result[1] = sign * evaluateStrategy( board );
+      result[1] = sign * evaluateStrategy_2( board );
       return result;
     }
     for( int pos : board.availableActions() ) {
@@ -150,7 +149,7 @@ public class NegaMaxRobot implements Robot {
     }
     if( depth == 0 || board.isGameOver() ) {
       result[0] = board.getLastMove();
-      result[1] = sign * evaluateStrategy( board );
+      result[1] = sign * evaluateStrategy_2( board );
       if( result[1] <= alpha ) // a lowerbound value
         table.addResult( board.getZobristHashKey(), TranspositionType.LOWERBOUND, result[0], result[1], depth );
       else if( result[1] >= beta ) // an upperbound value
@@ -186,27 +185,27 @@ public class NegaMaxRobot implements Robot {
     return result;
   }
 
-  private int evaluateStrategy( Board board ) {
-    int us = 1 - board.getNextPlayer();
-    int score = 0;
-    int boardSize = board.sideLength;
-    int boardArea = boardSize * boardSize;
-    int[] counted = new int[boardArea + 1];
-    for( int pos = 0; pos < boardArea; ++pos ) {
-      counted[pos] = 0;
-    }
-    for( int pos = 0; pos < boardArea; ++pos ) {
-      int cell = board.getState( pos );
-      if( cell >= 0 ) {
-        int ps = board.getLifeOfShape( pos );
-        if( counted[ps] == 0 ) {
-          score += ( cell == us ? ps : 0 );
-          counted[ps] = 1;
-        }
-      }
-    }
-    return score;
-  }
+//  private int evaluateStrategy( Board board ) {
+//    int us = 1 - board.getNextPlayer();
+//    int score = 0;
+//    int boardSize = board.sideLength;
+//    int boardArea = boardSize * boardSize;
+//    int[] counted = new int[boardArea + 1];
+//    for( int pos = 0; pos < boardArea; ++pos ) {
+//      counted[pos] = 0;
+//    }
+//    for( int pos = 0; pos < boardArea; ++pos ) {
+//      int cell = board.getState( pos );
+//      if( cell >= 0 ) {
+//        int ps = board.getLifeOfShape( pos );
+//        if( counted[ps] == 0 ) {
+//          score += ( cell == us ? ps : 0 );
+//          counted[ps] = 1;
+//        }
+//      }
+//    }
+//    return score;
+//  }
 
   public static int evaluateStrategy_2( Board board ) {
     int nextPlayer = board.getNextPlayer();
@@ -214,8 +213,11 @@ public class NegaMaxRobot implements Robot {
 
     int[] liberties = board.getLifesForColor();
     int[] euler = board.getEulerNumber();
-    int[] numOfPieces = board.getNumOfPieces();
-    int score = Math.min( Math.max( ( liberties[currentPlayer] - liberties[nextPlayer] ), -5 ), 5 ) + -4 * ( euler[currentPlayer] - euler[nextPlayer] ) + 5 * ( numOfPieces[currentPlayer] - numOfPieces[nextPlayer] ) - 20 * numOfPieces[2 + currentPlayer];
+    //int[] numOfPieces = board.getNumOfPieces();
+    int lifes = liberties[currentPlayer] - liberties[nextPlayer];
+    int E = euler[currentPlayer] - euler[nextPlayer];
+    //int amount = numOfPieces[currentPlayer] - numOfPieces[nextPlayer];
+    int score = Math.min( Math.max( ( lifes ), -3 ), 3 ) - 4 * E;
     return score;
   }
 

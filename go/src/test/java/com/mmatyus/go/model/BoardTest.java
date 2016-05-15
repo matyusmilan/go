@@ -3,8 +3,10 @@ package com.mmatyus.go.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.Test;
@@ -131,7 +133,7 @@ public class BoardTest {
     //WHEN
     empties.set( 0, boardType.cellCount );
     //THEN
-    assertTrue( testBoard.empties.equals( empties ) );
+    assertTrue( testBoard.emptyCells.equals( empties ) );
   }
 
   @Test
@@ -267,5 +269,176 @@ public class BoardTest {
     }
     //THEN
     assertTrue( testBoard.availableActions().get( 0 ) == Board.PASS_MOVE && testBoard.availableActions().size() == 1 );
+  }
+
+  public void takeMoveSequence( List<Integer> moveList ) {
+    for( int m : moveList ) {
+      testBoard.move( m );
+    }
+  }
+
+  // Atari
+  @Test
+  public void testAtari1() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.shapesInAtari.get( center ) );
+  }
+
+  // Atari
+  @Test
+  public void testAtari2() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.shapesInAtari.cardinality() == 1 );
+  }
+
+  // Atari
+  @Test
+  public void testAtari3() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.numberOfShapesInAtari == 1 );
+  }
+
+  @Test
+  public void testLifes1() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.lives[testBoard.shapeAtPos[0]].cardinality() == 3 );
+  }
+
+  @Test
+  public void testLifes2() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.lives[testBoard.shapeAtPos[center]].cardinality() == 1 );
+  }
+
+  @Test
+  public void testLifes3() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.numberOfLifes[testBoard.shapeAtPos[center]] == 1 );
+  }
+
+  @Test
+  public void testEmpty1() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.emptyCells.cardinality() == boardType.cellCount - moveList.size() );
+  }
+
+  @Test
+  public void testEmpty2() {
+    //GIVEN
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    assertTrue( testBoard.numberOfEmptyCells == boardType.cellCount - moveList.size() );
+  }
+
+  @Test
+  public void testEmpty3() {
+    //GIVEN
+    BitSet notEmpty = new BitSet( boardType.cellCount );
+    notEmpty.clear();
+    List<Integer> moveList = new ArrayList<Integer>();
+    int center = ( boardType.cellCount - 1 ) / 2;
+    moveList.add( center );
+    notEmpty.set( center );
+    moveList.add( boardType.neighbor( center, 0 ) );
+    notEmpty.set( boardType.neighbor( center, 0 ) );
+    moveList.add( 0 );
+    notEmpty.set( 0 );
+    moveList.add( boardType.neighbor( center, 1 ) );
+    notEmpty.set( boardType.neighbor( center, 1 ) );
+    moveList.add( 1 );
+    notEmpty.set( 1 );
+    moveList.add( boardType.neighbor( center, 2 ) );
+    notEmpty.set( boardType.neighbor( center, 2 ) );
+    //WHEN
+    takeMoveSequence( moveList );
+    //THEN
+    notEmpty.or( testBoard.emptyCells );
+    assertTrue( notEmpty.cardinality() == boardType.cellCount );
   }
 }

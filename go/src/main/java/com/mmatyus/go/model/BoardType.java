@@ -1,7 +1,6 @@
 package com.mmatyus.go.model;
 
 public enum BoardType {
-  //MINI( 5, "5x5", 2, 64F ),
   SMALL( 9, "9x9", 4, 56F ),
   MEDIUM( 13, "13x13", 5, 44F ),
   LARGE( 19, "19x19", 9, 42F );
@@ -11,11 +10,11 @@ public enum BoardType {
 
   public final int        sideLength;
   public final int        cellCount;
-  public final String     label;
   private final int[][]   neighborPos;
-  public final int        startPoints;
 
   // GUI only
+  public final String     label;
+  public final int        startPoints;
   public final float      posLabelSize;
 
   BoardType( int side, String lable, int sp, float pls ) {

@@ -39,8 +39,6 @@ public class Board {
 
   // Shapes
   protected int[]              shapeAtPos;                              // Shape id for each position. Index is table position.
-  protected int[]              lifeCounts;                              // Life counts for each shape. Index is shape id.
-  protected BitSet[]           lives;                                   // Life giving cells of each shape. Index is shape id.
   protected int[]              nextInShape;                             // Points to the next stone of the shape on this position. Index is table position.
 
   protected int                moves;                                   // Moves so far
@@ -49,10 +47,12 @@ public class Board {
   protected int                nextPlayer;                              // Id of next player, BLACK (0) or WHITE (1) 
   protected transient double[] area;                                    // 0-WHITE, 1-BLACK, 0,5 - neutral
 
-  protected BitSet             empties;                                 // pos -> isEmpty()
-  protected int                numberOfShapesInAtari;
-  protected BitSet             shapesInAtari;                           // pos -> isAtari = position is part of a shape with one life
+  protected int[]              numberOfLifes;                           // Life counts for each shape. Index is shape id.
+  protected BitSet[]           lives;                                   // Life giving cells of each shape. Index is shape id.
   protected int                numberOfEmptyCells;
+  protected BitSet             emptyCells;                              // pos -> isEmpty()
+  protected int                numberOfShapesInAtari;
+  protected BitSet             shapesInAtari;                           // pos -> isAtari()  = position is part of a shape with one life
 
   protected long               zobristHashKey = 0L;
 
@@ -75,12 +75,12 @@ public class Board {
     this.zobrist = new Zobrist( boardType );
 
     this.cells = new int[cellCount];
-    this.empties = new BitSet( cellCount );
+    this.emptyCells = new BitSet( cellCount );
     this.shapesInAtari = new BitSet( cellCount );
     this.area = new double[cellCount];
     this.shapeAtPos = new int[cellCount];
     this.nextInShape = new int[cellCount];
-    this.lifeCounts = new int[cellCount];
+    this.numberOfLifes = new int[cellCount];
     this.lives = new BitSet[cellCount];
     for( int i = 0; i < cellCount; ++i ) {
       this.lives[i] = new BitSet( cellCount );
@@ -113,15 +113,15 @@ public class Board {
     System.arraycopy( other.cells, 0, cells, 0, cells.length );
     System.arraycopy( other.shapeAtPos, 0, shapeAtPos, 0, shapeAtPos.length );
     System.arraycopy( other.nextInShape, 0, nextInShape, 0, nextInShape.length );
-    System.arraycopy( other.lifeCounts, 0, lifeCounts, 0, lifeCounts.length );
+    System.arraycopy( other.numberOfLifes, 0, numberOfLifes, 0, numberOfLifes.length );
 
     for( int i = 0; i < lives.length; ++i ) {
       lives[i].clear();
       lives[i].or( other.lives[i] );
     }
 
-    empties.clear();
-    empties.or( other.empties );
+    emptyCells.clear();
+    emptyCells.or( other.emptyCells );
     numberOfEmptyCells = other.numberOfEmptyCells;
 
     shapesInAtari.clear();
@@ -134,7 +134,7 @@ public class Board {
       cells[i] = EMPTY;
       shapeAtPos[i] = i;
       nextInShape[i] = i;
-      lifeCounts[i] = 0;
+      numberOfLifes[i] = 0;
       lives[i].clear();
     }
     zobristHashKey = 0L;
@@ -144,7 +144,7 @@ public class Board {
     nextPlayer = BLACK;
     koPos = NO_KO_POS;
 
-    empties.set( 0, cellCount );
+    emptyCells.set( 0, cellCount );
     numberOfEmptyCells = cellCount;
 
     shapesInAtari.clear();
@@ -176,7 +176,7 @@ public class Board {
         headOfString = shapeAtPos[i];
         if( !s.contains( headOfString ) ) {
           s.add( headOfString );
-          lifeCount[cells[headOfString]] += lifeCounts[shapeAtPos[headOfString]];
+          lifeCount[cells[headOfString]] += numberOfLifes[shapeAtPos[headOfString]];
         }
       }
     }
@@ -280,85 +280,6 @@ public class Board {
     return numEuler;
   }
 
-  public int[] dumpEulerNumber() {
-    int[] numEuler = new int[2];
-    numEuler[BLACK] = 0;
-    numEuler[WHITE] = 0;
-    int[] nQ1 = new int[2];
-    nQ1[BLACK] = 0;
-    nQ1[WHITE] = 0;
-    int[] nQ3 = new int[2];
-    nQ3[BLACK] = 0;
-    nQ3[WHITE] = 0;
-    int[] nQd = new int[2];
-    nQd[BLACK] = 0;
-    nQd[WHITE] = 0;
-    int[] sumColor = new int[2];
-    sumColor[BLACK] = 0;
-    sumColor[WHITE] = 0;
-    boolean[] onBoard = new boolean[4];
-    int x, y;
-    for( int i = -1; i < sideLength; i++ ) {
-      for( int j = -1; j < sideLength; j++ ) {
-        x = i;
-        y = j;
-        onBoard[0] = false;
-        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
-          onBoard[0] = true;
-          if( 0 <= cells[getPos( x, y )] )
-            sumColor[cells[getPos( x, y )]]++;
-        }
-        x = i + 1;
-        y = j;
-        onBoard[1] = false;
-        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
-          onBoard[1] = true;
-          if( 0 <= cells[getPos( x, y )] )
-            sumColor[cells[getPos( x, y )]]++;
-        }
-        x = i;
-        y = j + 1;
-        onBoard[3] = false;
-        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
-          onBoard[3] = true;
-          if( 0 <= cells[getPos( x, y )] )
-            sumColor[cells[getPos( x, y )]]++;
-        }
-        x = i + 1;
-        y = j + 1;
-        onBoard[2] = false;
-        if( x != -1 && y != -1 && x != sideLength && y != sideLength ) {
-          onBoard[2] = true;
-          if( 0 <= cells[getPos( x, y )] )
-            sumColor[cells[getPos( x, y )]]++;
-        }
-        for( int color = 0; color <= 1; color++ ) {
-          switch( sumColor[color] ) {
-            case 1:
-              nQ1[color]++;
-              break;
-            case 2:
-              if( ( onBoard[0] && onBoard[2] && cells[getPos( i, j )] + cells[getPos( i + 1, j + 1 )] == 2 * color ) || ( onBoard[1] && onBoard[3] && cells[getPos( i + 1, j )] + cells[getPos( i, j + 1 )] == 2 * color ) )
-                nQd[color]++;
-              break;
-            case 3:
-              nQ3[color]++;
-              break;
-            default:
-              break;
-          }
-        }
-        sumColor[BLACK] = 0;
-        sumColor[WHITE] = 0;
-      }
-    }
-    for( int color = 0; color <= 1; color++ ) {
-      System.out.println( "c: " + color + " nQ1: " + nQ1[color] + " nQ3: " + nQ3[color] + " 2nQd: " + ( 2 * nQd[color] ) );
-      numEuler[color] = ( nQ1[color] - nQ3[color] + 2 * nQd[color] ) / 4;
-    }
-    return numEuler;
-  }
-
   public boolean isGameOver() {
     return passNum == 2 || moves > 2 * cellCount || lastMove == RESIGN_MOVE;
   }
@@ -385,10 +306,10 @@ public class Board {
       if( isEmpty( p ) ) {
         return false;
       } else if( cells[p] == selfColor ) {
-        if( lifeCounts[shapeAtPos[p]] > 1 )
+        if( numberOfLifes[shapeAtPos[p]] > 1 )
           return false;
       } else if( cells[p] == otherColor ) {
-        if( lifeCounts[shapeAtPos[p]] == 1 )
+        if( numberOfLifes[shapeAtPos[p]] == 1 )
           return false;
       }
     }
@@ -396,7 +317,7 @@ public class Board {
   }
 
   public int getLifeOfShape( int pos ) {
-    return lifeCounts[shapeAtPos[pos]];
+    return numberOfLifes[shapeAtPos[pos]];
   }
 
   public int getPos( int x, int y ) {
@@ -428,7 +349,7 @@ public class Board {
     assert ( cells[pos] == EMPTY );
     cells[pos] = color;
     zobristHashKey ^= zobrist.zArray[color][pos];
-    empties.clear( pos );
+    emptyCells.clear( pos );
     numberOfEmptyCells--;
   }
 
@@ -466,8 +387,6 @@ public class Board {
         addLifeToShape( pos, np );
       }
     }
-    //System.out.println("Board.move("+pos+");");
-
     nextPlayer = otherColor;
     moves++;
   }
@@ -499,21 +418,21 @@ public class Board {
   private void removeLifeNoKill( int target, int source ) {
     if( lives[shapeAtPos[target]].get( source ) ) {
       lives[shapeAtPos[target]].set( source, false );
-      setLifeCount( shapeAtPos[target], lifeCounts[shapeAtPos[target]] - 1 );
+      setLifeCount( shapeAtPos[target], numberOfLifes[shapeAtPos[target]] - 1 );
     }
   }
 
   private void addLifeToShape( int target, int emptyPos ) {
     if( !lives[shapeAtPos[target]].get( emptyPos ) ) {
       lives[shapeAtPos[target]].set( emptyPos );
-      setLifeCount( shapeAtPos[target], lifeCounts[shapeAtPos[target]] + 1 );
+      setLifeCount( shapeAtPos[target], numberOfLifes[shapeAtPos[target]] + 1 );
     }
   }
 
   private void removeLifeFromShape( int target, int source ) {
     if( lives[shapeAtPos[target]].get( source ) ) {
       lives[shapeAtPos[target]].set( source, false );
-      if( setLifeCount( shapeAtPos[target], lifeCounts[shapeAtPos[target]] - 1 ) == 0 ) {
+      if( setLifeCount( shapeAtPos[target], numberOfLifes[shapeAtPos[target]] - 1 ) == 0 ) {
         killShape( target, source );
       }
     }
@@ -549,17 +468,17 @@ public class Board {
 
     setLifeCount( pos, 0 );
 
-    empties.set( pos );
+    emptyCells.set( pos );
     numberOfEmptyCells++;
   }
 
   private int setLifeCount( int shapeId, int val ) {
-    if( lifeCounts[shapeId] == val )
+    if( numberOfLifes[shapeId] == val )
       return val;
-    if( lifeCounts[shapeId] == 1 ) {
+    if( numberOfLifes[shapeId] == 1 ) {
       removeShapeFromAtari( shapeId );
     }
-    lifeCounts[shapeId] = val;
+    numberOfLifes[shapeId] = val;
     if( val == 1 ) {
       addShapeToAtari( shapeId );
     }
@@ -627,7 +546,7 @@ public class Board {
     if( isGameOver() ) {
       return actions;
     }
-    for( int pos = empties.nextSetBit( 0 ); pos != -1; pos = empties.nextSetBit( pos + 1 ) ) {
+    for( int pos = emptyCells.nextSetBit( 0 ); pos != -1; pos = emptyCells.nextSetBit( pos + 1 ) ) {
       if( isLegalMove( pos ) ) {
         actions.add( pos );
       }

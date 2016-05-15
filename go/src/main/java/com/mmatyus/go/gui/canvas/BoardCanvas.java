@@ -9,7 +9,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Set;
@@ -23,6 +22,7 @@ import javax.imageio.ImageIO;
 import com.mmatyus.go.GoException;
 import com.mmatyus.go.ProgressContainer;
 import com.mmatyus.go.algorithms.NegaMaxRobot;
+import com.mmatyus.go.algorithms.Robot;
 import com.mmatyus.go.algorithms.uct.UCT_Robot;
 import com.mmatyus.go.gui.PlayerGraphic;
 import com.mmatyus.go.model.Algorithm;
@@ -33,7 +33,6 @@ import com.mmatyus.go.model.Handicap;
 import com.mmatyus.go.model.Player;
 import com.mmatyus.go.model.PlayerPolicy;
 import com.mmatyus.go.model.PlayerType;
-import com.mmatyus.go.model.Robot;
 
 public class BoardCanvas extends AbstractCanvas {
   private static final long serialVersionUID               = 1L;
@@ -244,11 +243,11 @@ public class BoardCanvas extends AbstractCanvas {
           }
 
           // pos
-          String posStr = pos + "";
-          g0.setFont( Font.decode( "Arial bold 12" ) );
-          Rectangle2D rect = g0.getFontMetrics().getStringBounds( posStr, g0 );
-          g0.setColor( brownColor );
-          g0.drawString( posStr, 10 + (int) ( x1 - rect.getWidth() / 2 ), 10 + (int) ( y1 + rect.getHeight() / 2 ) );
+//          String posStr = pos + "";
+//          g0.setFont( Font.decode( "Arial bold 12" ) );
+//          Rectangle2D rect = g0.getFontMetrics().getStringBounds( posStr, g0 );
+//          g0.setColor( brownColor );
+//          g0.drawString( posStr, 10 + (int) ( x1 - rect.getWidth() / 2 ), 10 + (int) ( y1 + rect.getHeight() / 2 ) );
         }
       }
     }

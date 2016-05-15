@@ -1,10 +1,10 @@
 package com.mmatyus.go.algorithms.uct;
 
 import com.mmatyus.go.ProgressContainer;
+import com.mmatyus.go.algorithms.Robot;
 import com.mmatyus.go.model.Board;
 import com.mmatyus.go.model.PlayerPolicy;
-import com.mmatyus.go.model.RandomPlayerBoard;
-import com.mmatyus.go.model.Robot;
+import com.mmatyus.go.model.AlmostRandomGame;
 
 public class UCT_Robot implements Robot {
   protected PlayerPolicy      policy;
@@ -40,7 +40,7 @@ public class UCT_Robot implements Robot {
       ucb_pair.multiply( policy.forceOfPrior );
     }
 
-    RandomPlayerBoard randomPlayerBoard = new RandomPlayerBoard( board.boardType, policy );
+    AlmostRandomGame randomPlayerBoard = new AlmostRandomGame( board.boardType, policy );
     randomPlayerBoard.setBoard( board.clone() );
 
     UCT_Node<Integer> root = new UCT_Node<>( null, randomPlayerBoard, null, policy, ucb_pair );
@@ -57,8 +57,8 @@ public class UCT_Robot implements Robot {
     }
 
     if( policy.useUCBPrior ) {
-      System.out.println( "UCT Tree" );
-      root.dump( 2, 3, policy.iterations, "" );
+      //System.out.println( "UCT Tree" );
+      //root.dump( 2, 3, policy.iterations, "" );
     }
     if( root.getWinRate() < policy.passThreshold ) {
       System.out.println( "Best action: PASS" );

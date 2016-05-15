@@ -157,7 +157,6 @@ public class SettingsCanvas extends AbstractCanvas {
         g2d.drawString( players[Board.WHITE].playerType.toString(), 790, 330 );
         i = 0;
         final int COMPUTER_SETTING_ROW_HEIGHT = 45;
-        String[] strength_label = { "Easy", "Medium", "Hard" };
         for( Algorithm alg : Algorithm.values() ) {
           if( players[Board.BLACK].playerType == PlayerType.COMPUTER ) {
             g0.drawImage( ( alg == players[Board.BLACK].algo ) ? btnRadioOn : btnRadioOff, 100, i * COMPUTER_SETTING_ROW_HEIGHT + 435, null );
@@ -172,6 +171,7 @@ public class SettingsCanvas extends AbstractCanvas {
           i++;
         }
         i = 0;
+        String[] strength_label = { "Easy", "Medium", "Hard" };
         for( int s = 0; s < strength_label.length; s++ ) {
           if( players[Board.BLACK].playerType == PlayerType.COMPUTER ) {
             g0.drawImage( ( s == players[Board.BLACK].param ) ? btnRadioOn : btnRadioOff, 100, i * COMPUTER_SETTING_ROW_HEIGHT + 660, null );
